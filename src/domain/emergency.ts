@@ -59,7 +59,14 @@ export function buildEmergencyText(input: EmergencyInput): string {
         const m = dayMeetups.find((x) => x.startMinute >= prevEnd - 5 && x.startMinute < start);
         lines.push('');
         lines.push(`${formatMinutes(prevEnd)}  OPEN`);
-        if (m) lines.push(`   Suggested meetup at ${m.location.name} (${formatMinutes(m.startMinute)})`);
+        // A bare "(4:59 PM)" read as an arrival deadline and disagreed with
+        // every in-app surface, which all speak in windows (MeetupCard, Find
+        // My Crew). On paper — the one place with no app to cross-check —
+        // the line has to carry the whole meaning itself.
+        if (m)
+          lines.push(
+            `   Suggested meetup at ${m.location.name} — window ${formatMinutes(m.startMinute)} – ${formatMinutes(m.endMinute)}`,
+          );
       }
       const artist = input.artistById.get(p.artistId)?.name ?? 'Artist';
       const stage = p.stageId ? input.locationById.get(p.stageId)?.name ?? 'Stage TBA' : 'Stage TBA';
