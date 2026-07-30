@@ -1,4 +1,4 @@
-import { Calendar, Clock, Star, Users, Flag, ChevronRight, Plus } from 'lucide-react';
+import { Calendar, Clock, Star, Users, ChevronRight, Plus } from 'lucide-react';
 import { useApp } from '@/store/appStore';
 import { useClock } from '@/hooks/useClock';
 import { Screen, Card, Button } from '@/components/ui';
@@ -144,20 +144,26 @@ function PreSchedule({
       {/* Setup progress stays visible until the essentials are done. */}
       <SetupCard onGoTab={onGoTab} onOpenMenu={onOpenMenu} />
 
-      {/* Plan overview */}
-      <Card className="mb-4 p-4">
-        <h2 className="mb-3 font-display text-[15px] uppercase tracking-wide text-secondary">
-          Your Plan Overview
-        </h2>
-        <div className="grid grid-cols-4 gap-1 text-center">
-          {bandsPerDay.map((d) => (
-            <Stat key={d.id} Icon={Star} iconClass={d.iconClass} value={d.count} label={d.label} />
-          ))}
-          <Stat Icon={Users} iconClass="text-warp-orange" value={friendsImported} label="Friends" />
-          {/* A real zero — "--" read as a broken widget next to its siblings. */}
-          <Stat Icon={Flag} iconClass="text-warp-ok" value={0} label="Meetups" />
-        </div>
-      </Card>
+      {/* Plan overview — only once there is a plan to overview. A grid of
+          zeroes ten seconds into a fresh install summarises nothing; it comes
+          back the instant a band is starred or a friend's plan lands.
+
+          No Meetups cell: PreSchedule only renders while no set times exist,
+          so meetups are structurally zero in every state this card can be in.
+          The remaining zeroes are real ones — "--" read as a broken widget. */}
+      {(totalPicked > 0 || friendsImported > 0) && (
+        <Card className="mb-4 p-4">
+          <h2 className="mb-3 font-display text-[15px] uppercase tracking-wide text-secondary">
+            Your Plan Overview
+          </h2>
+          <div className="grid grid-cols-3 gap-1 text-center">
+            {bandsPerDay.map((d) => (
+              <Stat key={d.id} Icon={Star} iconClass={d.iconClass} value={d.count} label={d.label} />
+            ))}
+            <Stat Icon={Users} iconClass="text-warp-orange" value={friendsImported} label="Friends" />
+          </div>
+        </Card>
+      )}
 
       {/* Next up — honest empty state that routes to the user's actual next
           step: pick bands first, then worry about set times. */}
@@ -229,28 +235,34 @@ function PreSchedule({
         </button>
       </Card>
 
-      {/* Schedule status */}
-      <Card className="mb-2 border-warp-yellow/50 bg-warp-yellow/5 p-4">
-        <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-dashed border-warp-yellow-dark text-warp-yellow-dark">
-            <Calendar size={22} aria-hidden />
-          </span>
-          <div className="flex-1">
-            <div className="font-display text-[15px] text-primary">Set times not loaded</div>
-            <p className="text-[13px] text-secondary">
-              Add or import the official stage schedule when it&apos;s released.
-            </p>
+      {/* Schedule status. Held back until at least one band is picked: with an
+          empty plan this was the sixth door on one screen to the same two jobs,
+          and it argues for the wrong one — the next move is bands, not import.
+          Import stays reachable from the setup checklist, the Schedule tab and
+          the drawer. */}
+      {totalPicked > 0 && (
+        <Card className="mb-2 border-warp-yellow/50 bg-warp-yellow/5 p-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-dashed border-warp-yellow-dark text-warp-yellow-dark">
+              <Calendar size={22} aria-hidden />
+            </span>
+            <div className="flex-1">
+              <div className="font-display text-[15px] text-primary">Set times not loaded</div>
+              <p className="text-[13px] text-secondary">
+                Add or import the official stage schedule when it&apos;s released.
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <Button variant="yellow" onClick={() => onOpenMenu('schedule-io')}>
-            Import Set Times
-          </Button>
-          <Button variant="secondary" onClick={() => onGoTab('schedule')}>
-            Enter Manually
-          </Button>
-        </div>
-      </Card>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <Button variant="yellow" onClick={() => onOpenMenu('schedule-io')}>
+              Import Set Times
+            </Button>
+            <Button variant="secondary" onClick={() => onGoTab('schedule')}>
+              Enter Manually
+            </Button>
+          </div>
+        </Card>
+      )}
 
       <div className="space-y-2 px-1 pt-3 text-center text-[11px] leading-relaxed text-muted">
         {APP_DISCLAIMER.map((para) => (
