@@ -6,11 +6,9 @@
 //      the goatcounter-snippet plugin in vite.config.ts.
 //   2. The launch/import beacons in src/analytics.ts.
 //
-// PLACEHOLDER — Robbie creates the free GoatCounter account (1 min) and
-// pastes the site code; empty string = analytics fully disabled, zero
-// requests. The site code is the subdomain on the dashboard URL:
-// https://<site-code>.goatcounter.com
+// Set 2026-07-30. Dashboard: https://robbied.goatcounter.com
+// Empty string would disable analytics entirely — zero requests.
 //
 // Typed `string`, not the literal '', so the gating branches ("is a code
 // set?") stay live code to the compiler instead of statically-dead ones.
-export const GOATCOUNTER_SITE_CODE: string = '';
+export const GOATCOUNTER_SITE_CODE: string = 'robbied';
