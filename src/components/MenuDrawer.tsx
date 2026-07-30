@@ -184,9 +184,12 @@ export function MenuDrawer({
           ))}
         </ul>
         <div className="space-y-2 px-5 py-4 text-[11px] leading-relaxed text-muted">
-          {APP_DISCLAIMER.map((para) => (
-            <p key={para}>{para}</p>
-          ))}
+          {/* Founder-approved 2026-07-30 (SN-10): non-affiliation paragraph only.
+              The full three-paragraph block stays verbatim on the onboarding
+              welcome and About (plan §6's designated surfaces) — and About is
+              one row up in this very list. */}
+          <p>{APP_DISCLAIMER[0]}</p>
+          <p>Full disclaimer in About.</p>
         </div>
       </div>
     </div>

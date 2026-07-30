@@ -265,9 +265,12 @@ function PreSchedule({
       )}
 
       <div className="space-y-2 px-1 pt-3 text-center text-[11px] leading-relaxed text-muted">
-        {APP_DISCLAIMER.map((para) => (
-          <p key={para}>{para}</p>
-        ))}
+        {/* Founder-approved 2026-07-30 (SN-10): this surface carries only the
+            non-affiliation paragraph. All three paragraphs stay verbatim on the
+            onboarding welcome and About — the two surfaces plan §6 designates.
+            The record lives there; this line is the reminder. */}
+        <p>{APP_DISCLAIMER[0]}</p>
+        <p>Full disclaimer in About.</p>
       </div>
     </Screen>
   );
