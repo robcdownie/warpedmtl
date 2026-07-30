@@ -5,8 +5,8 @@ why each one exists. Written while forking Long Beach → Montréal so the next
 fork (Mexico City, Orlando) is a ~3-session job instead of nine. Work through
 it top to bottom; the order is dependency order, not importance.
 
-Status keys below reflect the Montréal fork: **[x]** done in S1 (identity),
-**[A2]** pending in S2 (sweep + harness), **[A3]** pending in S3 (seeds + ship).
+Status reflects the Montréal fork: all three sessions are done — S1
+(identity), S2 (sweep + harness), S3 (seeds + ship).
 
 ## 1. Identity (S1) — do this before anything renders
 
@@ -93,14 +93,28 @@ Status keys below reflect the Montréal fork: **[x]** done in S1 (identity),
 
 ## 3. Seeds + ship (S3)
 
-- [A3] `src/data/stages.ts` — neutral stage ids until the real map exists
-  (keep `warped-unplugged-stage`).
-- [A3] `src/data/locations.ts` — strip old-city pins, seed the new entrance;
-  update `ENTRANCE_LOCATION_ID` in `event.ts` to match (left as
-  `shoreline-village-drive-entrance` until the locations seed lands — travel
-  math falls back to it, so they must move together).
-- [A3] Seed-dependent tests: `seed.test.ts` counts; `leaveBy.test.ts` /
-  `meetups.test.ts` reference seeded location names.
+- [x] `src/data/stages.ts` — neutral numbered stages (`stage-1`…`stage-8`,
+  names "Stage 1"…) on a grid until the real map exists; keep
+  `warped-unplugged-stage` verbatim (board entry pins unplugged sets to that
+  exact id). Real names/positions arrive by coordinates code — imports match
+  by id and renames propagate, so nothing strands.
+- [x] `src/data/locations.ts` — strip old-city pins, seed the new entrance
+  (`parc-jean-drapeau-entrance`); update `ENTRANCE_LOCATION_ID` in `event.ts`
+  in the same commit — travel math falls back to it, so they must move
+  together. `PREFERRED_LANDMARK_IDS` in `domain/meetups.ts` names old-city
+  pins too; shrink it to the entrance (missing ids are skipped harmlessly, so
+  it regrows with the coordinates code).
+- [x] `src/data/amenities.ts` — down to the minimal set the features need:
+  the Water / Restrooms / First Aid map filters plus one pin per
+  break-planner errand (Food, Water Stations, Charge Station, Restrooms,
+  Lockers). Neutral spread positions; Map Setup's reference-layout state
+  carries the honesty.
+- [x] Seed-dependent tests: `seed.test.ts` pins the neutral layout (8+1
+  stages, entrance exists and matches config, break-planner coverage);
+  `leaveBy.test.ts` / `meetups.test.ts` fixtures carry the entrance id; and
+  `verify-e2e.mjs` drives the store with REAL seeded stage ids — its
+  check-in/schedule/stale-position steps must track the rename or the
+  export-validation check fails against the new stage table.
 - [x] Lineup: NOT seeded until the official day split drops. **Done in S2,
   not S3, and not "harmless to keep":** the old city's bands are string
   literals in the built bundle, and Long Beach's bill included Taking Back
@@ -115,9 +129,10 @@ Status keys below reflect the Montréal fork: **[x]** done in S1 (identity),
   `festival-blueprint/montreal/lineup-staging.md`), note its §3 step 6: the
   ban needs the one Taking Back Sunday exception taught to it THEN — never
   pre-emptively.
-- [A3] Ship: full gate (`npm test` + `verify-e2e`), push to `main`
-  (`deploy.yml` fires on push and gates on the same suites), enable Pages,
-  verify the live URL + string ban against the served bundle.
+- [x] Ship: full gate (`npm test` + `verify-e2e`), enable Pages (workflow
+  build type) BEFORE the first push, push to `main` (`deploy.yml` fires on
+  push and gates on the same suites), then verify the live URL + string ban
+  against the served bundle — the deployed text, not the local dist.
 
 ## Left for a human, per instance
 

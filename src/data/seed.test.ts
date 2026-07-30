@@ -3,6 +3,10 @@ import { buildSeed, type SeedLists } from './seed';
 import { SATURDAY_ARTISTS } from './artists-saturday';
 import { SUNDAY_ARTISTS } from './artists-sunday';
 import { UNPLUGGED_APPEARANCES } from './artists-unplugged';
+import { STAGES } from './stages';
+import { NAMED_LOCATIONS } from './locations';
+import { AMENITY_LOCATIONS } from './amenities';
+import { ENTRANCE_LOCATION_ID } from '@/config/event';
 
 /**
  * The shipped Montréal seed is deliberately EMPTY of bands: the official day
@@ -22,6 +26,31 @@ describe('shipped seed state (Montréal, pre-lineup)', () => {
     expect(performances).toHaveLength(0);
     // Stages and map pins still seed — the board and map work lineup-less.
     expect(locations.length).toBeGreaterThan(0);
+  });
+
+  it('ships neutral numbered stages until the real stage names land', () => {
+    // Eight placeholder stages; real names and positions arrive by
+    // coordinates code (renames propagate), never by guessing sponsors.
+    expect(STAGES.filter((s) => /^stage-\d$/.test(s.id))).toHaveLength(8);
+    // Warped Unplugged keeps its id — board entry pins unplugged sets to it.
+    expect(STAGES.some((s) => s.id === 'warped-unplugged-stage')).toBe(true);
+    expect(STAGES).toHaveLength(9);
+  });
+
+  it('the entrance the travel math falls back to actually exists', () => {
+    const entrance = NAMED_LOCATIONS.find((l) => l.id === ENTRANCE_LOCATION_ID);
+    expect(entrance).toBeDefined();
+    expect(entrance!.category).toBe('entrance');
+    // The entrance is the ONLY named pin — everything else about the site
+    // layout is unannounced, and this app does not decorate maps with fiction.
+    expect(NAMED_LOCATIONS).toHaveLength(1);
+  });
+
+  it('every break-planner errand has at least one amenity pin to aim at', () => {
+    const types = new Set(AMENITY_LOCATIONS.map((l) => l.amenityType));
+    for (const t of ['Food', 'Water Stations', 'Charge Station', 'Restrooms', 'Lockers', 'First Aid']) {
+      expect(types.has(t), `missing amenity type: ${t}`).toBe(true);
+    }
   });
 });
 

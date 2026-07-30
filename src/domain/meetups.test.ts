@@ -20,7 +20,7 @@ const locations: MapLocation[] = [
   { id: 'lobos-1707', name: 'Lobos 1707', category: 'bar', xPercent: 59, yPercent: 60 },
   { id: '32-taps', name: '32 Taps', category: 'bar', xPercent: 78, yPercent: 42 },
   { id: '60-taps', name: '60 Taps', category: 'bar', xPercent: 21, yPercent: 66 },
-  { id: 'shoreline-village-drive-entrance', name: 'Entrance', category: 'entrance', xPercent: 14, yPercent: 54 },
+  { id: 'parc-jean-drapeau-entrance', name: 'Entrance', category: 'entrance', xPercent: 14, yPercent: 54 },
 ];
 
 function perf(id: string, day: 'saturday', stageId: string, start: string, end: string): Performance {

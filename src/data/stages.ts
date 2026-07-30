@@ -1,6 +1,15 @@
 import type { MapLocation } from '@/domain/types';
 
-// Nine performance stages (spec §13). Starter % coordinates; editable via calibration.
+// Montréal's stage names are unannounced, so the eight main stages ship as
+// numbered placeholders spread across the reference layout — honest about
+// knowing nothing rather than confident about another city's sponsors. Real
+// names and positions arrive by coordinates code (imports match by id, and
+// both adds and renames propagate), so 'stage-1' can become the real thing
+// without stranding anyone's plan.
+//
+// Warped Unplugged keeps its id and name: the Montréal roster is unconfirmed,
+// but the stage is a fixture of the tour and board entry pins unplugged sets
+// to this exact id.
 export const STAGES: MapLocation[] = [
   {
     id: 'warped-unplugged-stage',
@@ -11,68 +20,68 @@ export const STAGES: MapLocation[] = [
     yPercent: 47,
   },
   {
-    id: 'vans-stage',
-    name: 'Vans Stage',
-    shortName: 'Vans',
+    id: 'stage-1',
+    name: 'Stage 1',
+    shortName: 'Stage 1',
     category: 'stage',
-    xPercent: 58,
-    yPercent: 42,
+    xPercent: 20,
+    yPercent: 30,
   },
   {
-    id: 'off-the-wall-stage',
-    name: 'Off The Wall Stage',
-    shortName: 'Off The Wall',
+    id: 'stage-2',
+    name: 'Stage 2',
+    shortName: 'Stage 2',
     category: 'stage',
-    xPercent: 66,
-    yPercent: 46,
+    xPercent: 40,
+    yPercent: 30,
   },
   {
-    id: 'beatbox-stage',
-    name: 'BeatBox Stage',
-    shortName: 'BeatBox',
+    id: 'stage-3',
+    name: 'Stage 3',
+    shortName: 'Stage 3',
     category: 'stage',
-    xPercent: 84,
-    yPercent: 45,
+    xPercent: 60,
+    yPercent: 30,
   },
   {
-    id: 'ghost-stage',
-    name: 'Ghost Stage',
-    shortName: 'Ghost',
+    id: 'stage-4',
+    name: 'Stage 4',
+    shortName: 'Stage 4',
     category: 'stage',
-    xPercent: 93,
-    yPercent: 45,
+    xPercent: 80,
+    yPercent: 30,
   },
   {
-    id: 'rex-stage',
-    name: 'Rex Stage',
-    shortName: 'Rex',
+    id: 'stage-5',
+    name: 'Stage 5',
+    shortName: 'Stage 5',
     category: 'stage',
-    xPercent: 26,
-    yPercent: 70,
+    xPercent: 20,
+    yPercent: 58,
   },
   {
-    id: 'octopus-stage',
-    name: 'Octopus Stage',
-    shortName: 'Octopus',
+    id: 'stage-6',
+    name: 'Stage 6',
+    shortName: 'Stage 6',
     category: 'stage',
-    xPercent: 35,
-    yPercent: 70,
+    xPercent: 40,
+    yPercent: 58,
   },
   {
-    id: 'doordash-stage',
-    name: 'DoorDash Stage',
-    shortName: 'DoorDash',
+    id: 'stage-7',
+    name: 'Stage 7',
+    shortName: 'Stage 7',
     category: 'stage',
-    xPercent: 77,
-    yPercent: 72,
+    xPercent: 60,
+    yPercent: 58,
   },
   {
-    id: 'verizon-stage',
-    name: 'Verizon Stage',
-    shortName: 'Verizon',
+    id: 'stage-8',
+    name: 'Stage 8',
+    shortName: 'Stage 8',
     category: 'stage',
-    xPercent: 88,
-    yPercent: 72,
+    xPercent: 80,
+    yPercent: 58,
   },
 ];
 

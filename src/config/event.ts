@@ -35,7 +35,7 @@ export const APP_DISCLAIMER =
  * Location id of the festival entrance (see src/data/locations.ts). Used as the
  * origin/fallback point for travel math before a first set or without a stage.
  */
-export const ENTRANCE_LOCATION_ID = 'shoreline-village-drive-entrance';
+export const ENTRANCE_LOCATION_ID = 'parc-jean-drapeau-entrance';
 
 /** Base path used for asset URLs (matches vite base + PWA scope). */
 export const BASE_URL = import.meta.env.BASE_URL;

@@ -256,8 +256,8 @@ async function functionalPass(base) {
     // pick two Saturday main performances
     const perfs = W.state().performances.filter((p) => p.type === 'main' && p.day === 'saturday').slice(0, 2);
     const [a, b] = perfs;
-    await W.updatePerformance({ ...a, stageId: 'ghost-stage', startTime: '15:00', endTime: '15:40', scheduleStatus: 'scheduled' });
-    await W.updatePerformance({ ...b, stageId: 'rex-stage', startTime: '15:20', endTime: '16:00', scheduleStatus: 'scheduled' });
+    await W.updatePerformance({ ...a, stageId: 'stage-1', startTime: '15:00', endTime: '15:40', scheduleStatus: 'scheduled' });
+    await W.updatePerformance({ ...b, stageId: 'stage-2', startTime: '15:20', endTime: '16:00', scheduleStatus: 'scheduled' });
     await W.toggleSelection('alex', a.id);
     await W.setPriority('alex', a.id, 'must-see');
     await W.toggleSelection('alex', b.id);
@@ -524,7 +524,7 @@ async function functionalPass(base) {
   // 5. Manual check-in persists.
   await page.evaluate(async () => {
     await window.__WLB__.state().putCheckIn({
-      id: 'e2e-checkin', userId: 'alex', locationId: 'ghost-stage',
+      id: 'e2e-checkin', userId: 'alex', locationId: 'stage-1',
       customCoordinates: null, source: 'manual', updatedAt: new Date().toISOString(),
     });
   });
@@ -542,7 +542,7 @@ async function functionalPass(base) {
     // wins, so both can't be present for this half of the test.
     await st.deleteCheckIn('e2e-checkin');
     await st.putCheckIn({
-      id: 'e2e-stale', userId: 'alex', locationId: 'doordash-stage',
+      id: 'e2e-stale', userId: 'alex', locationId: 'stage-3',
       customCoordinates: null, source: 'manual',
       updatedAt: new Date(Date.now() - 48 * 60000).toISOString(),
     });
@@ -551,7 +551,7 @@ async function functionalPass(base) {
     // Restore the fresh check-in for the offline-persistence checks below.
     await st.deleteCheckIn('e2e-stale');
     await st.putCheckIn({
-      id: 'e2e-checkin', userId: 'alex', locationId: 'ghost-stage',
+      id: 'e2e-checkin', userId: 'alex', locationId: 'stage-1',
       customCoordinates: null, source: 'manual', updatedAt: new Date().toISOString(),
     });
     return {
@@ -565,17 +565,17 @@ async function functionalPass(base) {
   });
   check(
     'a fresh check-in is the position',
-    staleFallback.freshSource === 'manual' && staleFallback.freshLoc === 'ghost-stage',
+    staleFallback.freshSource === 'manual' && staleFallback.freshLoc === 'stage-1',
     `source=${staleFallback.freshSource} loc=${staleFallback.freshLoc}`,
   );
   check(
     'a STALE check-in falls back to the planned position (plan §P0-3)',
-    staleFallback.staleSource === 'planned' && staleFallback.staleLoc !== 'doordash-stage',
+    staleFallback.staleSource === 'planned' && staleFallback.staleLoc !== 'stage-3',
     `source=${staleFallback.staleSource} loc=${staleFallback.staleLoc}`,
   );
   check(
     'the stale check-in survives only as history',
-    staleFallback.staleHistoryLoc === 'doordash-stage' && staleFallback.staleAge >= 45,
+    staleFallback.staleHistoryLoc === 'stage-3' && staleFallback.staleAge >= 45,
     `history=${staleFallback.staleHistoryLoc} age=${staleFallback.staleAge}`,
   );
 

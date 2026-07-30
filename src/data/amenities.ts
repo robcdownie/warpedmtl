@@ -1,18 +1,17 @@
 import type { MapLocation } from '@/domain/types';
 
 /**
- * Amenity pins transcribed from the festival map artwork.
+ * Amenity pins for the reference layout.
  *
- * These were previously "added later via calibration mode" and never were, so
- * the Water / Restrooms / First Aid filters — the things people actually open
- * a festival map for — had nothing to show, and the break planner had nowhere
- * to send anyone.
+ * Montréal's site plan is unpublished, so this is the minimal set the app's
+ * own features depend on: the Water / Restrooms / First Aid map filters — the
+ * things people actually open a festival map for — plus one target per
+ * break-planner errand (eat, water, recharge, restroom, lockers).
  *
- * Positions are read off the map image by eye, so they are STARTER
- * coordinates: good enough to point you at the right corner of the site, not
- * survey-grade. Map Setup keeps the map flagged unverified until a human has
- * checked these against the official 2026 layout, and Calibration can drag any
- * of them.
+ * Positions are a neutral spread across the reference grid, NOT observed
+ * locations: enough for the features to work, useless for navigation, and Map
+ * Setup says so until a human verifies the layout against the official 2026
+ * map. Real positions arrive by coordinates code or calibration.
  */
 
 interface AmenitySeed {
@@ -22,29 +21,12 @@ interface AmenitySeed {
 }
 
 const AMENITY_SEEDS: AmenitySeed[] = [
-  { type: 'Water Stations', points: [[78.4, 42.5], [21.1, 63.6]] },
-  { type: 'VIP Water Stations', points: [[72.6, 47.1]] },
-  { type: 'Restrooms', points: [[74.4, 45.4], [43.6, 54.6], [44.5, 66.0]] },
-  { type: 'VIP Restrooms', points: [[68.9, 51.1], [67.6, 52.8]] },
-  { type: 'First Aid', points: [[43.9, 43.7], [87.4, 53.7], [17.4, 64.6]] },
-  { type: 'Lockers', points: [[47.5, 41.9], [47.5, 60.4]] },
-  { type: 'Food', points: [[26.5, 52.9], [62.6, 51.6], [72.9, 53.9], [11.9, 63.9], [60.2, 61.0]] },
-  { type: 'Food Truck', points: [[65.3, 51.9], [70.9, 55.6], [87.7, 56.1]] },
-  { type: 'Bar', points: [[50.6, 46.0], [24.1, 52.5], [77.5, 45.6], [28.1, 56.9], [14.5, 64.3], [57.3, 60.8], [70.8, 66.2]] },
-  { type: 'VIP Bar', points: [[49.9, 40.2], [66.5, 49.6]] },
-  { type: 'VIP Food', points: [[47.1, 45.8], [53.4, 40.7]] },
-  { type: 'Warped Merch', points: [[39.5, 58.6]] },
-  { type: 'General Store', points: [[42.4, 57.7]] },
-  { type: 'Accessible Viewing', points: [[55.3, 44.4], [60.8, 47.9], [81.1, 47.1], [36.1, 56.2], [82.4, 61.9]] },
-  { type: 'Charge Station', points: [[64.1, 53.7], [44.4, 61.7]] },
-  { type: 'ID Check', points: [[49.0, 43.6], [31.9, 53.8], [26.2, 58.6], [49.4, 59.0]] },
-  { type: 'Cash Exchange', points: [[29.2, 53.4], [52.5, 59.2]] },
-  { type: 'Info', points: [[49.0, 62.3]] },
-  { type: 'Lost & Found', points: [[50.9, 60.8]] },
-  { type: 'Ticket Help', points: [[17.6, 52.9]] },
-  { type: 'Box Office', points: [[6.8, 48.6]] },
-  { type: 'Pit Stop', points: [[21.1, 49.8]] },
-  { type: 'Consciousness Group', points: [[40.3, 43.9]] },
+  { type: 'Water Stations', points: [[30, 40], [70, 48]] },
+  { type: 'Restrooms', points: [[14, 40], [50, 48], [86, 40]] },
+  { type: 'First Aid', points: [[50, 36], [50, 66]] },
+  { type: 'Food', points: [[30, 66], [70, 66]] },
+  { type: 'Charge Station', points: [[60, 40]] },
+  { type: 'Lockers', points: [[40, 66]] },
 ];
 
 function slug(type: string): string {

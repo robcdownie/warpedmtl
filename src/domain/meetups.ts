@@ -288,14 +288,12 @@ function reasonFor(
   return `${loc.name} is ${clear} for ${who} — ${walk}.`;
 }
 
-/** Default preferred landmark ids from spec §29 (plus major stages added by the engine). */
-export const PREFERRED_LANDMARK_IDS = [
-  'warped-museum',
-  'charity-circle',
-  '805-area',
-  'lobos-1707',
-  'vans-activation',
-  '32-taps',
-  '60-taps',
-  'shoreline-village-drive-entrance',
-];
+/**
+ * Default preferred landmark ids from spec §29 (plus major stages added by
+ * the engine). The last stop shipped seven named landmarks here; Montréal's
+ * site layout is unannounced, so the entrance is the only pin guaranteed to
+ * be a clear, findable meeting point. Ids that aren't in the location table
+ * are skipped harmlessly, so this list grows again when real destinations
+ * arrive by coordinates code.
+ */
+export const PREFERRED_LANDMARK_IDS = ['parc-jean-drapeau-entrance'];

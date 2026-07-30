@@ -7,7 +7,7 @@ const stages: MapLocation[] = [
   { id: 'ghost', name: 'Ghost Stage', shortName: 'Ghost', category: 'stage', xPercent: 93, yPercent: 45 },
   { id: 'rex', name: 'Rex Stage', shortName: 'Rex', category: 'stage', xPercent: 26, yPercent: 70 },
   // The entrance id the travel math falls back to before the first set.
-  { id: 'shoreline-village-drive-entrance', name: 'Entrance', category: 'entrance', xPercent: 50, yPercent: 95 },
+  { id: 'parc-jean-drapeau-entrance', name: 'Entrance', category: 'entrance', xPercent: 50, yPercent: 95 },
 ];
 
 function perf(id: string, stageId: string, start: string, end: string): Performance {
@@ -68,7 +68,7 @@ describe('leave-by planning (add-on §2)', () => {
   it('uses the entrance as the origin before the first set', () => {
     const info = nextLeaveBy('member-1', 'saturday', hhmmToMinutes('11:30'), ctx)!;
     expect(info.performanceId).toBe('a');
-    expect(info.fromLocationId).toBe('shoreline-village-drive-entrance');
+    expect(info.fromLocationId).toBe('parc-jean-drapeau-entrance');
   });
 
   it('a heavier crowd setting means leaving earlier', () => {
