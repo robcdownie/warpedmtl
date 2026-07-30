@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { EVENT } from '@/config/event';
 import { parseBoardTime, shouldAdvanceBoardTime, timeUntilFestival, getNow, windDownStarted } from './time';
 
-// The board lists start times only, within festival hours (11:00-22:00), so a
+// The board lists start times only, within festival hours (11:00-23:00), so a
 // bare number is unambiguous. These cases are transcribed from the real 2025
 // set-time poster.
 describe('parseBoardTime', () => {
@@ -86,99 +86,114 @@ describe('shouldAdvanceBoardTime', () => {
 // `ended` gates the post-festival wrap-up, which replaces the Now tab. A false
 // positive would hijack the main screen mid-festival — the single worst thing
 // this flag can do — so the boundaries are pinned in festival-local time.
-// Long Beach is PDT (UTC-7) in July; the last day closes at 22:00.
+// Montréal is EDT (UTC-4) in August; the last day closes at 23:00.
 describe('timeUntilFestival', () => {
   const at = (iso: string) => timeUntilFestival(new Date(iso));
 
   it('has not started the night before', () => {
-    const t = at('2026-07-24T20:00:00-07:00');
+    const t = at('2026-08-20T20:00:00-04:00');
     expect(t.started).toBe(false);
     expect(t.ended).toBe(false);
   });
 
   it('counts down in festival-local time, not UTC', () => {
-    // 11:00 PDT Saturday is 18:00Z — an implementation that forgot the offset
-    // would report the festival as already open at 04:00 PDT.
-    const t = at('2026-07-25T04:00:00-07:00');
+    // 11:00 EDT Friday is 15:00Z — an implementation that forgot the offset
+    // would report the festival as already open at 07:00 EDT.
+    const t = at('2026-08-21T07:00:00-04:00');
     expect(t.started).toBe(false);
-    expect(t.hours).toBe(7);
+    expect(t.hours).toBe(4);
   });
 
   it('is running, not ended, in the middle of day one', () => {
-    const t = at('2026-07-25T14:30:00-07:00');
+    const t = at('2026-08-21T14:30:00-04:00');
     expect(t.started).toBe(true);
     expect(t.ended).toBe(false);
   });
 
   it('is running, not ended, overnight between the two days', () => {
-    const t = at('2026-07-26T02:00:00-07:00');
+    const t = at('2026-08-22T02:00:00-04:00');
     expect(t.started).toBe(true);
     expect(t.ended).toBe(false);
   });
 
   it('is still running one minute before the last set could end', () => {
-    const t = at('2026-07-26T21:59:00-07:00');
+    const t = at('2026-08-22T22:59:00-04:00');
     expect(t.ended).toBe(false);
   });
 
   it('ends after close on the final day', () => {
-    const t = at('2026-07-26T22:01:00-07:00');
+    const t = at('2026-08-22T23:01:00-04:00');
     expect(t.started).toBe(true);
     expect(t.ended).toBe(true);
   });
 
   it('stays ended the following week', () => {
-    expect(at('2026-08-02T12:00:00-07:00').ended).toBe(true);
+    expect(at('2026-08-29T12:00:00-04:00').ended).toBe(true);
   });
 });
 
 describe('the festival day does not end at midnight', () => {
   it('the small hours after the last night are not a festival day', () => {
     // 00:30 the morning after the FINAL day. getNow reports no festival day,
-    // so the clock used to fall back to a Saturday NOON simulation labelled
-    // "Previewing Saturday" — right when you're in a dark car park trying to
+    // so the clock used to fall back to a day-one NOON simulation labelled
+    // "Previewing Friday" — right when you're in a dark metro queue trying to
     // find people. useFestivalClock now looks back a day instead.
     const last = EVENT.days[EVENT.days.length - 1].date;
     const [y, m, d] = last.split('-').map(Number);
-    const afterMidnight = new Date(Date.UTC(y, m - 1, d + 1, 7, 30)); // 00:30 PT
+    const afterMidnight = new Date(Date.UTC(y, m - 1, d + 1, 4, 30)); // 00:30 ET
     expect(getNow(afterMidnight).day).toBeNull();
     expect(getNow(afterMidnight).minutes).toBe(30);
 
     // …and the previous calendar day, which is what the clock falls back to.
+    // 'sunday' is the final day's LEGACY STORAGE ID (it renders as
+    // "Saturday" here) — see the day-token comment in config/event.ts.
     const nightBefore = new Date(afterMidnight.getTime() - 24 * 60 * 60 * 1000);
     expect(getNow(nightBefore).day).toBe('sunday');
   });
 });
 
 // This flag strips the public app down to a thank-you, the band list and a
-// Venmo link. A false positive takes the map away from someone standing in the
-// venue, so the boundary is pinned in festival-local time. PDT is UTC-7.
+// tip link. A false positive takes the map away from someone still on the
+// island — Parc Jean-Drapeau empties through the metro for 45–60 minutes
+// after close, which is exactly when the map is needed — so the boundary is
+// close + 180 min on the FINAL day, pinned in festival-local time. EDT is
+// UTC-4; the final day closes 23:00 Sat, so wind-down is 02:00 Sun.
 describe('windDownStarted', () => {
   const at = (iso: string) => windDownStarted(new Date(iso));
 
   it('is false all through the first day', () => {
-    expect(at('2026-07-25T21:45:00-07:00')).toBe(false);
-    expect(at('2026-07-25T23:59:00-07:00')).toBe(false);
+    expect(at('2026-08-21T22:45:00-04:00')).toBe(false);
+    expect(at('2026-08-21T23:59:00-04:00')).toBe(false);
   });
 
-  it('is false during the final day, up to the minute before', () => {
-    expect(at('2026-07-26T11:00:00-07:00')).toBe(false);
-    expect(at('2026-07-26T21:29:59-07:00')).toBe(false);
+  it('does not fire off the FIRST night close — only the final day counts', () => {
+    // Friday also closes 23:00, so Friday close + 180 min is 02:00 Saturday.
+    // An implementation deriving from the wrong day would delete the app to a
+    // thank-you page between the two festival days.
+    expect(at('2026-08-21T23:30:00-04:00')).toBe(false); // Fri, after close
+    expect(at('2026-08-22T02:30:00-04:00')).toBe(false); // Fri close + 3.5 h
   });
 
-  it('is true from 21:30 on the final day', () => {
-    expect(at('2026-07-26T21:30:00-07:00')).toBe(true);
+  it('is false through the final day, close, and the egress window', () => {
+    expect(at('2026-08-22T11:00:00-04:00')).toBe(false);
+    expect(at('2026-08-22T23:30:00-04:00')).toBe(false); // out past close, map alive
+    expect(at('2026-08-23T01:59:00-04:00')).toBe(false); // close + 179 min
+  });
+
+  it('is true from three hours after the final close', () => {
+    expect(at('2026-08-23T02:00:00-04:00')).toBe(true); // close + 180 min, exact
+    expect(at('2026-08-23T02:01:00-04:00')).toBe(true); // close + 181 min
   });
 
   it('reads the boundary in festival time, not UTC', () => {
-    // 21:30 PDT is 04:30Z the next day. An implementation that compared UTC
-    // clock time would fire this at 14:30 local — mid-afternoon, gates open.
-    expect(at('2026-07-26T14:30:00-07:00')).toBe(false);
-    expect(at('2026-07-27T04:30:00Z')).toBe(true);
+    // 02:00 EDT Sunday is 06:00Z. An implementation that compared UTC clock
+    // time would fire this at 22:00 Saturday local — an hour before close.
+    expect(at('2026-08-22T22:00:00-04:00')).toBe(false);
+    expect(at('2026-08-23T06:00:00Z')).toBe(true);
   });
 
   it('stays wound down afterwards', () => {
-    expect(at('2026-07-27T09:00:00-07:00')).toBe(true);
-    expect(at('2026-12-01T09:00:00-08:00')).toBe(true);
+    expect(at('2026-08-23T09:00:00-04:00')).toBe(true);
+    expect(at('2026-12-01T09:00:00-05:00')).toBe(true);
   });
 });

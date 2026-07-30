@@ -15,10 +15,10 @@ import { chromium, webkit, devices } from '@playwright/test';
  *
  * Two reasons. The app is a festival planner, so almost every screen it renders
  * depends on what "now" is — running the suite against the wall clock meant the
- * result drifted with the date. And from 21:30 on the final day the public app
- * winds down to a thank-you (WIND_DOWN_AT in domain/time.ts), which would
- * otherwise fail every check here from that minute on — including the ones
- * gating deploys.
+ * result drifted with the date. And three hours after close on the final day
+ * the public app winds down to a thank-you (WIND_DOWN_AFTER_CLOSE_MINUTES in
+ * domain/time.ts), which would otherwise fail every check here from that
+ * minute on — including the ones gating deploys.
  */
 const HARNESS_NOW = new Date('2026-07-25T14:00:00-07:00');
 

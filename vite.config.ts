@@ -5,8 +5,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 
-// GitHub Pages project site is served from /warpedLB/
-const BASE = '/warpedLB/';
+// GitHub Pages project site is served from /warpedmtl/ — lowercase on
+// purpose, Pages paths are case-sensitive and the repo name is the path.
+const BASE = '/warpedmtl/';
 
 // Build stamp shown in About + the update toast so "did the update land?" is
 // answerable on a phone over flaky festival Wi-Fi.
@@ -42,10 +43,10 @@ export default defineConfig({
       ],
       manifest: {
         id: BASE,
-        name: 'Warped LB Companion (Unofficial)',
-        short_name: 'Warped LB',
+        name: 'Warped MTL Companion (Unofficial)',
+        short_name: 'Warped MTL',
         description:
-          'Unofficial offline planner for Vans Warped Tour Long Beach 2026. Pick bands, spot clashes, share plans by code. Everything stays on your phone.',
+          'Unofficial offline planner for Vans Warped Tour Montréal 2026. Pick bands, spot clashes, share plans by code. Everything stays on your phone.',
         start_url: BASE,
         scope: BASE,
         display: 'standalone',
@@ -65,11 +66,12 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Every cache name is namespaced to this app. GitHub Pages serves both
-        // this app and its private sibling from the same origin, and origin —
-        // not path — is the Cache Storage boundary, so a shared name would let
-        // the two installs overwrite each other on one phone.
-        cacheId: 'warpedlb-public',
+        // Every cache name is namespaced to this app. GitHub Pages serves
+        // every Warped instance on this account — the Long Beach app included
+        // — from the same origin, and origin, not path, is the Cache Storage
+        // boundary, so a shared name would let two installs overwrite each
+        // other on one phone.
+        cacheId: 'warpedmtl-public',
         // Precache the entire built app shell + all static assets (js/css/html/img/fonts).
         globPatterns: ['**/*.{js,css,html,webp,png,svg,woff,woff2,ico,json,webmanifest}'],
         // iOS fetches launch images itself at Add-to-Home-Screen time; they're
@@ -86,11 +88,11 @@ export default defineConfig({
           {
             // Any GET under our own base path that we didn't precache: cache-first.
             // Scoped to BASE rather than the whole origin so this app never
-            // caches the sibling app's assets (same origin, different path).
+            // caches a sibling app's assets (same origin, different path).
             urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith(BASE),
             handler: 'CacheFirst',
             options: {
-              cacheName: 'warpedlb-public-runtime',
+              cacheName: 'warpedmtl-public-runtime',
               expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 90 },
               cacheableResponse: { statuses: [0, 200] },
             },

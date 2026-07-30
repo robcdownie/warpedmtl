@@ -128,8 +128,10 @@ export function App() {
     );
   }
 
-  // Wind-down: from 21:30 on the final day the public app is a thank-you, the
-  // weekend's band list, and a Venmo link. Nothing else is routed to.
+  // Wind-down: from three hours after close on the final day the public app
+  // is a thank-you, the weekend's band list, and a tip link. Nothing else is
+  // routed to. The delay matters here: the island's metro egress runs long
+  // past the last set, and the map has to survive it.
   //
   // Ahead of onboarding on purpose — a stranger who installs it on the Monday
   // after should get the send-off, not a setup flow for a festival that's over.
@@ -137,7 +139,7 @@ export function App() {
   // it can't be read until IndexedDB is open.
   //
   // Reads the device clock, so it flips with no signal. Every other screen is
-  // still in this build; see WIND_DOWN_AT in domain/time.ts.
+  // still in this build; see WIND_DOWN_AFTER_CLOSE_MINUTES in domain/time.ts.
   if (mode === 'prod' && windDown) {
     return (
       <div className="surface-app relative flex h-full flex-col">

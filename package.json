@@ -1,9 +1,9 @@
 {
-  "name": "warpedlb-companion",
+  "name": "warpedmtl-companion",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Unofficial offline-first planner PWA for Vans Warped Tour Long Beach 2026",
+  "description": "Unofficial offline-first planner PWA for Vans Warped Tour Montréal 2026",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

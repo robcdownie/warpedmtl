@@ -1,7 +1,7 @@
 import { EVENT } from '@/config/event';
 import type { DayId } from './types';
 
-// All set times are wall-clock local (America/Los_Angeles). We store "HH:mm"
+// All set times are wall-clock local (America/Toronto). We store "HH:mm"
 // strings and convert to minutes-since-midnight for math. This avoids timezone
 // bugs while offline: comparisons are within a single festival day.
 
@@ -20,7 +20,7 @@ export function minutesToHHMM(min: number): string {
 /**
  * Parse a set time typed off the festival board into "HH:mm".
  *
- * The board lists start times only, in festival hours (11:00–22:00), so a bare
+ * The board lists start times only, in festival hours (11:00–23:00), so a bare
  * number is unambiguous and we can skip the AM/PM tap entirely:
  *   "1153" -> 11:53 AM   "1254" -> 12:54 PM   "205" -> 2:05 PM   "931" -> 9:31 PM
  * An explicit am/pm always wins, and a 24-hour time typed in full is kept as-is.
@@ -56,7 +56,7 @@ export function parseBoardTime(raw: string): string | null {
     hh = hh % 12;
     if (meridiem === 'pm') hh += 12;
   } else if (hh >= 1 && hh <= 10) {
-    // Festival runs 11:00–22:00, so 1–10 can only mean afternoon/evening.
+    // Festival runs 11:00–23:00, so 1–10 can only mean afternoon/evening.
     hh += 12;
   }
   // 11 stays 11 AM, 12 stays 12 PM, 13–23 are already 24-hour.
@@ -179,26 +179,35 @@ export function timeUntilFestival(reference: Date = new Date()): {
 }
 
 /**
- * Festival-local time on the final day when the public app winds down to a
- * thank-you, the weekend's band list, and a Venmo link — and nothing else.
+ * Minutes after the final day's close before the public app winds down to a
+ * thank-you, the weekend's band list, and a tip link — and nothing else.
  *
- * Half an hour before the gates close, deliberately. Everything the app is
- * useful for is decided by then, and the alternative is a planning tool that
- * outlives the thing it plans.
+ * Long Beach wound down half an hour BEFORE close; Montréal inverts that.
+ * Parc Jean-Drapeau is an island with metro-only egress and 45–60-minute
+ * queues, so the map and meetup screens are needed most in the hours AFTER
+ * the last set — winding down mid-exodus would take the map away from people
+ * still standing in the venue. Three hours clears the crowd with margin.
+ *
+ * Derived from EVENT.festivalHours.closes rather than hardcoded, so the one
+ * unverified number (close time) is corrected in exactly one place.
  */
-export const WIND_DOWN_AT = '21:30';
+export const WIND_DOWN_AFTER_CLOSE_MINUTES = 180;
 
 /**
  * True once the public app has wound down. Read from the device clock in
  * festival-local time, so it flips with no network — the whole app works
  * offline and this transition has to as well.
  *
+ * Epoch math on purpose: close + 180 min crosses midnight, and comparing
+ * absolute ms sidesteps every wall-clock rollover bug that would invite.
+ *
  * Nothing is deleted when this returns true. Every screen is still in the
  * build; App.tsx simply stops routing to them.
  */
 export function windDownStarted(reference: Date = new Date()): boolean {
   const last = EVENT.days[EVENT.days.length - 1];
-  return reference.getTime() >= zonedDateTimeToMs(last.date, WIND_DOWN_AT);
+  const closeMs = zonedDateTimeToMs(last.date, EVENT.festivalHours.closes);
+  return reference.getTime() >= closeMs + WIND_DOWN_AFTER_CLOSE_MINUTES * 60_000;
 }
 
 /**
@@ -214,7 +223,7 @@ export function zonedDateTimeToMs(isoDate: string, hhmm: string): number {
   return guess - offset;
 }
 
-/** Timezone offset (ms) for a given instant, e.g. PDT = -7h => -25200000. */
+/** Timezone offset (ms) for a given instant, e.g. EDT = -4h => -14400000. */
 function tzOffsetMs(date: Date, timeZone: string): number {
   const dtf = new Intl.DateTimeFormat('en-US', {
     timeZone,

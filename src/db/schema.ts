@@ -13,11 +13,11 @@ import type {
 
 export const DB_VERSION = 1;
 // Namespaced to this app. IndexedDB is scoped by ORIGIN, not by path, and
-// GitHub Pages serves this app and its private sibling from the same origin —
-// so sharing a database name would mean the two installs read and overwrite
-// each other's picks on a phone that has both.
-export const PROD_DB_NAME = 'warpedlb-public-2026';
-export const DEMO_DB_NAME = 'warpedlb-public-2026-demo';
+// GitHub Pages serves every Warped instance on this account from one origin —
+// the Long Beach public app included — so reusing a database name would mean
+// a phone with both installed reads and overwrites the other app's picks.
+export const PROD_DB_NAME = 'warpedmtl-public-2026';
+export const DEMO_DB_NAME = 'warpedmtl-public-2026-demo';
 
 // A settings/meta value can be any JSON-serializable thing.
 export interface KV {
