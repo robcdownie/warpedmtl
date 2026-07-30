@@ -185,7 +185,12 @@ export type TipId =
   | 'board-code'
   | 'festival-mode'
   /** The post-festival recap. Dismissing it returns the Now tab to normal. */
-  | 'wrap-up';
+  | 'wrap-up'
+  /**
+   * One-time thank-you under a successful SCHEDULE import — the app's
+   * peak-delivered-value moment (donation memo). Never on selections imports.
+   */
+  | 'post-import-thanks';
 
 export interface AppSettings {
   activeUserId: string;

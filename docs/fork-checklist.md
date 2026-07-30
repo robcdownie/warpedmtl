@@ -81,6 +81,17 @@ owned audience), S5 (bilingual disclaimer + local-language blocks).
   `${BASE_URL}donate.html` ("Chip in"), new `public/donate.html`
   meta-refresh redirect (founder pastes the live Ko-fi URL; agents never
   hold it). Venmo-specific copy removed everywhere.
+- [x] Post-import thank-you card (`components/PostImportThanks.tsx`, rendered
+  by `ImportPanel.tsx`): the one "forward" donation surface, shown under a
+  successful SCHEDULE import — never on selections imports (the crew loop),
+  never gating or delaying the result, one dismissal forever (TipId
+  `post-import-thanks`). Per fork: nothing to edit except the French line
+  (`FR_POST_IMPORT_THANKS` in `config/event.ts`, which travels with the §5
+  native-review pass — swap or cut it with the rest of the local-language
+  strings). The e2e holds all three promises, and also DOMParser-checks that
+  the built `donate.html` still renders a redirect + fallback link — that
+  file shipped broken once (an unclosed header comment swallowed the whole
+  page to EOF) and it is the one file people edit during the deploy freeze.
 - [x] Harness: `verify-e2e.mjs` `HARNESS_NOW` → mid-festival day one in the
   new zone, `BASE` → new path; **built-bundle string ban** added (`Sunday`
   case-sensitive — lowercase day ids are storage tokens and stay; `Long

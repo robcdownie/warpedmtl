@@ -65,6 +65,17 @@ export const FR_ABOUT_NOTE =
   "L'appli est en anglais, mais elle est simple — choisissez vos groupes, repérez les conflits d'horaire, partagez vos plans par code QR ou texte, et tout fonctionne hors ligne au parc Jean-Drapeau. Gratuite et sans compte — vos plans restent sur votre téléphone. Les heures de passage ne sont pas officielles ; le tableau affiché à l'entrée fait foi.";
 
 /**
+ * French line on the one-time post-import thank-you card (donation memo: the
+ * moment someone just received the whole set-times board, free, offline).
+ * Drafted from the memo's QC-French copy, native review pending like every FR
+ * string here. NOTE for the reviewer: this line is tutoiement per the memo's
+ * punk-register call; the welcome/About blocks above shipped vouvoiement —
+ * pick one register and make them agree.
+ */
+export const FR_POST_IMPORT_THANKS =
+  "Horaire importé — tu viens de recevoir tout le tableau d'un autre fan, gratos, sans réseau. C'est ça, l'appli. Si elle fait la job cette fin de semaine, y a un pot à pourboires dans À propos. Peu importe : bon show.";
+
+/**
  * Location id of the festival entrance (see src/data/locations.ts). Used as the
  * origin/fallback point for travel math before a first set or without a stage.
  */

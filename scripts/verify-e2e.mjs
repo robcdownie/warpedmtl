@@ -748,6 +748,90 @@ async function functionalPass(base) {
     await W.updatePerformance({ ...spare, stageId: null, startTime: null, scheduleStatus: 'time-pending' });
   }, mapBill.spareId);
 
+  // 7c. POST-IMPORT THANK-YOU CARD (F2, donation memo). The one new donation
+  // surface: after a successful SCHEDULE import — the moment the app has just
+  // handed someone the whole set-times board — a dismissible thank-you card
+  // renders BELOW the import result. Three promises to hold, all driven
+  // through the real UI because the card lives in ImportPanel's committed
+  // state, which store-level applyImport never renders:
+  //   - a selections import (the crew loop) never shows it,
+  //   - the import result is never gated, delayed or replaced by it,
+  //   - one dismissal removes it forever, re-imports included.
+  const CARD_TEXT = 'whole board from another fan';
+  const pasteAndCommit = async (scope, code) => {
+    await page.waitForSelector(`${scope} button:text-is("Paste")`, { timeout: 5000 });
+    await page.click(`${scope} button:text-is("Paste")`);
+    await page.fill(`${scope} textarea`, code);
+    await page.click(`${scope} button:has-text("Read code")`);
+    await page.waitForSelector(`${scope} button:has-text("Import now")`, { timeout: 5000 });
+    await page.click(`${scope} button:has-text("Import now")`);
+    await page.waitForSelector(`${scope} p:text-is("Imported")`, { timeout: 5000 });
+  };
+  const bodyHas = (needle) => page.evaluate((n) => document.body.innerText.includes(n), needle);
+
+  // Selections import FIRST, while the tip is still undismissed — the only
+  // window where "never on a crew import" is distinguishable from "already
+  // dismissed".
+  const selCode = await page.evaluate(() => window.__WLB__.exportSelections('sam'));
+  await page.click('button[aria-label="Open menu"]');
+  await page.waitForSelector('button:has-text("Friends & Sharing")', { timeout: 5000 });
+  await page.click('button:has-text("Friends & Sharing")');
+  await page.waitForSelector('button:has-text("Import a friend")', { timeout: 5000 });
+  await page.click('button:has-text("Import a friend")');
+  await pasteAndCommit('[role="dialog"]', selCode);
+  check(
+    'post-import thanks: a SELECTIONS import never shows the card (crew loop stays ask-free)',
+    !(await bodyHas(CARD_TEXT)),
+  );
+  await page.click('[role="dialog"] button:has-text("Done")');
+  await page.waitForTimeout(300);
+
+  // A schedule import shows the card, below an intact result.
+  const schedCode = await page.evaluate(() => window.__WLB__.exportSchedule());
+  await page.click('button[aria-label="Open menu"]');
+  await page.waitForSelector('button:has-text("Schedule Import / Export")', { timeout: 5000 });
+  await page.click('button:has-text("Schedule Import / Export")');
+  await pasteAndCommit('main', schedCode);
+  check('post-import thanks: the card shows on a SCHEDULE import', await bodyHas(CARD_TEXT));
+  check(
+    'post-import thanks: the import result renders whole next to it',
+    !!(await page.$('main p:text-is("Imported")')),
+  );
+  const chipHref = await page.getAttribute('[role="note"] a', 'href').catch(() => null);
+  check(
+    'post-import thanks: the one link points at the swappable donate page',
+    chipHref === `${BASE}donate.html`,
+    `href=${chipHref}`,
+  );
+
+  // One tap to dismiss, forever.
+  await page.click('[role="note"] button:has-text("Got it")');
+  await page.waitForTimeout(300);
+  check('post-import thanks: one tap dismisses the card', !(await bodyHas(CARD_TEXT)));
+  check(
+    '…without touching the import result it sat under',
+    !!(await page.$('main p:text-is("Imported")')),
+  );
+  check(
+    'post-import thanks: the dismissal is stored settings, not component state',
+    await page.evaluate(() =>
+      window.__WLB__.settings().dismissedTips.includes('post-import-thanks'),
+    ),
+  );
+
+  // Leave the screen entirely (unmounts ImportPanel) and import again: the
+  // card must not come back.
+  await page.click('nav[aria-label="Primary"] button[aria-label="Now"]');
+  await page.waitForTimeout(300);
+  await page.click('button[aria-label="Open menu"]');
+  await page.waitForSelector('button:has-text("Schedule Import / Export")', { timeout: 5000 });
+  await page.click('button:has-text("Schedule Import / Export")');
+  await pasteAndCommit('main', schedCode);
+  check(
+    'post-import thanks: dismissed means never again, re-imports included',
+    !(await bodyHas(CARD_TEXT)),
+  );
+
   // 8. Error handling: invalid + wrong-version codes.
   const errs = await page.evaluate(() => {
     const W = window.__WLB__;
@@ -823,6 +907,38 @@ async function functionalPass(base) {
     'ban self-test: a bare "Sunday" literal still trips the ban',
     !!sundayBare && sundayBare.offenders.length === 1,
     sundayBare?.offenders.join('; ') ?? 'no Sunday entry in the scan',
+  );
+
+  // 10. DONATE PAGE PARSES. public/donate.html is the founder-swappable rail
+  // (the one file written exceptions allow through the deploy freeze), and it
+  // has already shipped broken once: the Ko-fi wiring edit dropped the "-->"
+  // off its header comment, and an unterminated comment swallows the meta
+  // refresh, the styles and the whole body to EOF — a blank page where the
+  // tip jar should be, behind every Chip in link in the app. Parse the BUILT
+  // file with real HTML comment rules (DOMParser) and demand the redirect and
+  // the human-tappable fallback link both survive parsing. Deliberately loose
+  // about the target URL: the destination is the founder's to swap; what can
+  // never regress silently is the page working at all.
+  const donateHtml = await readFile(join(DIST, 'donate.html'), 'utf8').catch(() => '');
+  const donateParsed = await page.evaluate((html) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const refresh = doc.querySelector('meta[http-equiv="refresh" i]');
+    const link = doc.querySelector('a[href^="http"]');
+    return {
+      refreshContent: refresh?.getAttribute('content') ?? null,
+      linkHref: link?.getAttribute('href') ?? null,
+      bodyText: doc.body?.textContent?.trim() ?? '',
+    };
+  }, donateHtml);
+  check(
+    'donate.html: the redirect survives HTML parsing (header comment closed)',
+    !!donateParsed.refreshContent && /url=https?:\/\//i.test(donateParsed.refreshContent),
+    `content=${donateParsed.refreshContent}`,
+  );
+  check(
+    'donate.html: a tappable fallback link renders in the body',
+    !!donateParsed.linkHref && donateParsed.bodyText.length > 0,
+    `href=${donateParsed.linkHref} body="${donateParsed.bodyText.slice(0, 40)}"`,
   );
 
   await browser.close();
@@ -1012,7 +1128,10 @@ function banOffenders(texts) {
 }
 
 async function stringBanPass() {
-  const files = [join(DIST, 'index.html'), join(DIST, 'manifest.webmanifest')];
+  // donate.html is in the list on purpose: it's the swappable donation rail,
+  // editable even during the deploy freeze — the one file where venmo.com
+  // could quietly come back.
+  const files = [join(DIST, 'index.html'), join(DIST, 'manifest.webmanifest'), join(DIST, 'donate.html')];
   const assetNames = await readdir(join(DIST, 'assets')).catch(() => []);
   for (const name of assetNames) {
     if (/\.(js|css)$/.test(name)) files.push(join(DIST, 'assets', name));

@@ -7,6 +7,7 @@ import { decodeEnvelope, DecodeError, type Envelope, type PayloadType } from '@/
 import { previewImport, type ImportPreview } from '@/domain/share/payloads';
 import { validateEnvelope, validateRawCode, type ValidationIssue } from '@/domain/share/validate';
 import { readTextFile } from '@/domain/share/files';
+import { PostImportThanks } from './PostImportThanks';
 import { useApp } from '@/store/appStore';
 
 type Method = 'scan' | 'paste' | 'file';
@@ -121,31 +122,38 @@ export function ImportPanel({
   // ----- committed state -----
   if (committed) {
     return (
-      <Card className="p-4 text-center">
-        {rolledBack ? (
-          <>
-            <Undo2 size={32} className="mx-auto mb-2 text-accent" aria-hidden />
-            <p className="font-display text-[16px] text-primary">Import undone</p>
-            <p className="mt-1 text-[13px] text-secondary">Your data was restored to before the import.</p>
-          </>
-        ) : (
-          <>
-            <CheckCircle2 size={32} className="mx-auto mb-2 text-warp-ok" aria-hidden />
-            <p className="font-display text-[16px] text-primary">Imported</p>
-            <p className="mt-1 text-[13px] text-secondary">{committed.summary}</p>
-          </>
-        )}
-        <div className="mt-4 flex justify-center gap-2">
-          {!rolledBack && (
-            <Button variant="secondary" onClick={doRollback}>
-              <Undo2 size={16} aria-hidden /> Undo import
-            </Button>
+      <div>
+        <Card className="p-4 text-center">
+          {rolledBack ? (
+            <>
+              <Undo2 size={32} className="mx-auto mb-2 text-accent" aria-hidden />
+              <p className="font-display text-[16px] text-primary">Import undone</p>
+              <p className="mt-1 text-[13px] text-secondary">Your data was restored to before the import.</p>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 size={32} className="mx-auto mb-2 text-warp-ok" aria-hidden />
+              <p className="font-display text-[16px] text-primary">Imported</p>
+              <p className="mt-1 text-[13px] text-secondary">{committed.summary}</p>
+            </>
           )}
-          <Button variant="primary" onClick={() => onDone?.()}>
-            Done
-          </Button>
-        </div>
-      </Card>
+          <div className="mt-4 flex justify-center gap-2">
+            {!rolledBack && (
+              <Button variant="secondary" onClick={doRollback}>
+                <Undo2 size={16} aria-hidden /> Undo import
+              </Button>
+            )}
+            <Button variant="primary" onClick={() => onDone?.()}>
+              Done
+            </Button>
+          </div>
+        </Card>
+        {/* One-time thank-you, SCHEDULE imports only — the value moment
+            (donation memo). A sibling BELOW the result on purpose: the import
+            outcome renders whole whether or not this ever shows, and rolling
+            the import back takes the thank-you's claim back with it. */}
+        {!rolledBack && env?.type === 'schedule' && <PostImportThanks />}
+      </div>
     );
   }
 
