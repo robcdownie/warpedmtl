@@ -1,6 +1,14 @@
 import { Screen, Card } from '@/components/ui';
 import { WarpedWordmark } from '@/components/WarpedWordmark';
-import { APP_NAME, APP_DISCLAIMER, EVENT, BASE_URL, NOTIFY_MAILTO } from '@/config/event';
+import {
+  APP_NAME,
+  APP_DISCLAIMER,
+  APP_DISCLAIMER_FR,
+  FR_ABOUT_NOTE,
+  EVENT,
+  BASE_URL,
+  NOTIFY_MAILTO,
+} from '@/config/event';
 import { GOATCOUNTER_SITE_CODE } from '@/config/analytics';
 import { festivalDaysLine } from '@/domain/time';
 
@@ -31,7 +39,29 @@ export function AboutScreen() {
         <h2 className="mb-1 font-display text-[14px] uppercase tracking-wide text-secondary">
           Disclaimer
         </h2>
-        <p className="text-[13px] leading-relaxed text-primary">{APP_DISCLAIMER}</p>
+        <div className="space-y-2">
+          {APP_DISCLAIMER.map((para) => (
+            <p key={para} className="text-[13px] leading-relaxed text-primary">
+              {para}
+            </p>
+          ))}
+        </div>
+        <div lang="fr" className="mt-3 space-y-2 border-t border-warp-yellow/30 pt-3">
+          {APP_DISCLAIMER_FR.map((para) => (
+            <p key={para} className="text-[13px] leading-relaxed text-primary">
+              {para}
+            </p>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="mb-4 p-4">
+        <div lang="fr">
+          <h2 className="mb-1 font-display text-[14px] uppercase tracking-wide text-secondary">
+            En français
+          </h2>
+          <p className="text-[13px] leading-relaxed text-secondary">{FR_ABOUT_NOTE}</p>
+        </div>
       </Card>
 
       <Card className="mb-4 p-4">

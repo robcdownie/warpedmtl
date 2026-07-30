@@ -24,6 +24,8 @@ export function buildEmergencyText(input: EmergencyInput): string {
   lines.push(`WARPED MONTRÉAL 2026 — ${input.user.name.toUpperCase()}'S PLAN`);
   lines.push(`${EVENT.venue}`);
   lines.push('Unofficial personal companion. Times you entered.');
+  // Same entity list as APP_DISCLAIMER — this export outlives the app on paper.
+  lines.push('Not affiliated with Vans, Vans Warped Tour, Insomniac, Live Nation, evenko, or Parc Jean-Drapeau.');
   lines.push('');
 
   for (const d of EVENT.days) {
@@ -72,6 +74,8 @@ export function buildEmergencyText(input: EmergencyInput): string {
   }
 
   lines.push('----------------------------------------');
-  lines.push('Not affiliated with or endorsed by Vans or Vans Warped Tour.');
+  // The affiliation line moved to the header; the sign-off keeps the one
+  // sentence that matters most when this is the only thing still working.
+  lines.push('The printed board at the gates is the only authority.');
   return lines.join('\n');
 }

@@ -2,7 +2,11 @@
 
 An **unofficial, fan-made planning app** for Vans Warped Tour Montréal 2026 (Fri Aug 21 – Sat Aug 22, Espace 67, Parc Jean-Drapeau). It's an installable Progressive Web App that works **fully offline** once installed — built for the reality that festival cell service is terrible, and Parc Jean-Drapeau's is notoriously so.
 
-> **Unofficial fan-made app.** Not affiliated with, endorsed by, or connected to Vans, Vans Warped Tour, or the venue. Set times are entered by you or imported from a code — always check the official board.
+> **Unofficial fan-made app.** Not affiliated with, endorsed by, or connected to Vans, Vans Warped Tour, Insomniac, Live Nation, evenko, or Parc Jean-Drapeau.
+>
+> Set times are entered by you or imported from a code someone shared. Codes posted by this app's maintainer are compiled remotely from public sources and photos sent by attendees — nobody on site has verified them. The printed board at the gates is the only authority.
+>
+> Walking times, leave-by alerts, and end times are estimates, not promises. The app has no GPS and no way to know where you actually are. Use your own judgment in a crowd.
 
 **Live app: https://robcdownie.github.io/warpedmtl/**
 
@@ -55,7 +59,7 @@ Then actually test it: **turn on Airplane Mode, force-close the app, reopen from
 
 ## What leaves your phone
 
-Nothing, unless you choose to export a code. There is no analytics, no advertising, no tracker, no account system, no email collection, no remote profile storage, and no background location. Profile photos are stored locally on your device. The app makes no network requests after it has cached itself.
+Nothing you typed, unless you choose to export a code. One exception, and it counts rather than tracks: an anonymous, cookieless tally of installs, launches and code imports (GoatCounter) — bare numbers, nothing that identifies you, and nothing at all until a site code is set in `src/config/analytics.ts` (it ships empty). There is no advertising, no tracker beyond that tally, no account system, no email collection, no remote profile storage, and no background location. Profile photos are stored locally on your device. Beyond the tally, the app makes no network requests after it has cached itself.
 
 Positions on the map are **planned from schedules**, not live GPS. If someone checks in manually, that's stored on *their* phone — it can't reach yours without a code.
 

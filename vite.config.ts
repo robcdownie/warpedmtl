@@ -69,8 +69,11 @@ export default defineConfig({
         id: BASE,
         name: 'Warped MTL Companion (Unofficial)',
         short_name: 'Warped MTL',
+        // One French sentence at the end — the app is English (decided, not
+        // deferred) and the store card should say so before anyone installs.
+        // Native-review window Aug 8–14 may amend the wording.
         description:
-          'Unofficial offline planner for Vans Warped Tour Montréal 2026. Pick bands, spot clashes, share plans by code. Everything stays on your phone.',
+          "Unofficial offline planner for Vans Warped Tour Montréal 2026. Pick bands, spot clashes, share plans by code. Everything stays on your phone. Planificateur non officiel et hors ligne — l'appli est en anglais.",
         start_url: BASE,
         scope: BASE,
         display: 'standalone',

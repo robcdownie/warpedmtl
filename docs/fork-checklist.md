@@ -5,9 +5,9 @@ why each one exists. Written while forking Long Beach → Montréal so the next
 fork (Mexico City, Orlando) is a ~3-session job instead of nine. Work through
 it top to bottom; the order is dependency order, not importance.
 
-Status reflects the Montréal fork: all four sessions are done — S1
+Status reflects the Montréal fork: all five sessions are done — S1
 (identity), S2 (sweep + harness), S3 (seeds + ship), S4 (measurement +
-owned audience).
+owned audience), S5 (bilingual disclaimer + local-language blocks).
 
 ## 1. Identity (S1) — do this before anything renders
 
@@ -171,6 +171,42 @@ owned audience).
   list, re-add whichever of the new city's confirmed bands embed banned
   words.
 
+## 5. Disclaimer + local language (S5)
+
+The app stays English per instance; the local language gets an honest
+handful of blocks, not a half-translation. (Montréal: French. Mexico City
+would repeat this section with Spanish.)
+
+- [x] `src/config/event.ts` — `APP_DISCLAIMER` replaced with the plan's
+  appendix copy as an array of paragraphs (entity list, where codes come
+  from + board authority, estimates-not-promises), `APP_DISCLAIMER_FR`
+  added alongside. Every render site maps paragraphs now —
+  `MenuDrawer.tsx` and `NowScreen.tsx` render EN only; the onboarding
+  welcome step and `AboutScreen.tsx` stack EN then FR (French wrapped in
+  `lang="fr"` for screen readers).
+- [x] Local-language orientation blocks, constants in the same file so the
+  native-review pass edits one place: `FR_WELCOME_NOTE` on the welcome
+  step (what it does, offline at the venue, free, no account, "the app is
+  in English"), `FR_ABOUT_NOTE` under an "En français" heading on About.
+  NO i18n framework, no other screens — that's the decided scope, not a
+  shortcut.
+- [x] `src/domain/emergency.ts` — the plain-text export header carries the
+  same entity list as the disclaimer (the printout outlives the app);
+  sign-off line is the board-authority sentence.
+- [x] `vite.config.ts` — one local-language sentence at the end of the
+  manifest description ("l'appli est en anglais" belongs on the install
+  card, before anyone installs).
+- [x] `docs/install.md` — one local-language pointer at the top, using the
+  OS's own localized menu labels («Sur l'écran d'accueil»).
+- [x] `README.md` — disclaimer blockquote matches the in-app copy;
+  measurement paragraph tells the truth about the tally (S4 added
+  counting, so "no analytics" claims had to go).
+- [x] Native review is a launch gate, not a nicety: drafted FR is marked
+  unreviewed until a francophone checks register (window Aug 8–14).
+  Review edits land in `event.ts` + the three satellite sites its header
+  comment names. No reviewer → cut public-facing French except the in-app
+  disclaimer.
+
 ## Left for a human, per instance
 
 - Create the instance's GoatCounter site (free, ~1 min) and paste the site
@@ -186,3 +222,8 @@ owned audience).
 - Verify the close time against the official FAQ before the deploy freeze
   (wind-down and the board parser's PM inference both lean on
   `festivalHours`).
+- Native speaker reviews every local-language string (register, not just
+  grammar — machine-flavored copy in the local subreddit reads as spam).
+  The full list of sites is in the `event.ts` header comment. No reviewer
+  by the deadline → ship English only, keep just the in-app disclaimer
+  bilingual.

@@ -183,9 +183,11 @@ export function MenuDrawer({
             </li>
           ))}
         </ul>
-        <p className="px-5 py-4 text-[11px] leading-relaxed text-muted">
-          {APP_DISCLAIMER}
-        </p>
+        <div className="space-y-2 px-5 py-4 text-[11px] leading-relaxed text-muted">
+          {APP_DISCLAIMER.map((para) => (
+            <p key={para}>{para}</p>
+          ))}
+        </div>
       </div>
     </div>
   );

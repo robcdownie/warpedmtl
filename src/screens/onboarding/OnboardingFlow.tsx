@@ -25,7 +25,7 @@ import {
   allEssentialPass,
   type FriendlyGroupResult,
 } from '@/domain/offlineTests';
-import { ART, APP_DISCLAIMER } from '@/config/event';
+import { ART, APP_DISCLAIMER, APP_DISCLAIMER_FR, FR_WELCOME_NOTE } from '@/config/event';
 import type { User } from '@/domain/types';
 import type { TabId } from '@/store/appStore';
 import type { MenuRoute } from '@/components/MenuDrawer';
@@ -199,6 +199,10 @@ function PurposeStep({
         Pick your bands, compare plans with friends, find schedule conflicts, and keep the
         festival map available offline.
       </p>
+      {/* One honest paragraph for francophones, not a half-translated app. */}
+      <p lang="fr" className="mt-2 text-[13px] leading-relaxed text-muted">
+        {FR_WELCOME_NOTE}
+      </p>
 
       <ul className="mt-6 space-y-3">
         <Benefit Icon={Star} title="Build your personal band list" body="Must See, Want to See, Maybe — and spot clashes before you're standing in one." />
@@ -226,7 +230,16 @@ function PurposeStep({
           I&apos;ve used this app before
         </Button>
       </div>
-      <p className="mt-4 text-center text-[11px] leading-relaxed text-muted">{APP_DISCLAIMER}</p>
+      <div className="mt-4 space-y-2 text-center text-[11px] leading-relaxed text-muted">
+        {APP_DISCLAIMER.map((para) => (
+          <p key={para}>{para}</p>
+        ))}
+        <div lang="fr" className="space-y-2">
+          {APP_DISCLAIMER_FR.map((para) => (
+            <p key={para}>{para}</p>
+          ))}
+        </div>
+      </div>
     </>
   );
 }

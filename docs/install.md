@@ -2,6 +2,8 @@
 
 The app installs to your Home Screen and then runs fully offline. Do this **once at home on Wi-Fi**, before the festival.
 
+> **En français** — L'appli est en anglais. Pour l'installer, ouvrez le lien dans Safari, touchez **Partager**, puis **« Sur l'écran d'accueil »**. Une fois installée, elle fonctionne entièrement hors ligne.
+
 ## Steps
 
 1. Open **Safari** on your iPhone (must be Safari — Chrome/Instagram/in-app browsers can't install a PWA on iOS).

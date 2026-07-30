@@ -28,8 +28,41 @@ export const EVENT = {
 export type EventDay = (typeof EVENT.days)[number];
 
 export const APP_NAME = 'Warped MTL Companion';
-export const APP_DISCLAIMER =
-  'Unofficial fan-made app. Not affiliated with, endorsed by, or connected to Vans, Vans Warped Tour, or the venue. Set times are entered by you or imported from a code — always check the official board.';
+
+/**
+ * Bilingual disclaimer, paragraph per entry (plan §8 appendix copy, drafted
+ * 2026-07-29). Not legal armor — Quebec law voids bodily-injury exclusions
+ * regardless of wording — its jobs are accuracy, non-affiliation, and being
+ * honest about what the app can't know. EN renders everywhere the disclaimer
+ * appears; FR is stacked under EN on the onboarding welcome step and About.
+ *
+ * ALL in-app French lives in this file (the constants below), plus three
+ * satellite sites: the manifest description in vite.config.ts, the install
+ * pointer in docs/install.md, and the README. The native-review pass
+ * (window Aug 8–14) edits those spots and nothing else.
+ */
+export const APP_DISCLAIMER = [
+  'Unofficial fan-made app. Not affiliated with, endorsed by, or connected to Vans, Vans Warped Tour, Insomniac, Live Nation, evenko, or Parc Jean-Drapeau.',
+  "Set times are entered by you or imported from a code someone shared. Codes posted by this app's maintainer are compiled remotely from public sources and photos sent by attendees — nobody on site has verified them. The printed board at the gates is the only authority.",
+  'Walking times, leave-by alerts, and end times are estimates, not promises. The app has no GPS and no way to know where you actually are. Use your own judgment in a crowd.',
+] as const;
+
+export const APP_DISCLAIMER_FR = [
+  'Application non officielle créée par un fan. Aucune affiliation avec Vans, Vans Warped Tour, Insomniac, Live Nation, evenko ou le parc Jean-Drapeau, ni aucune approbation de leur part.',
+  "Les heures de passage sont saisies par vous ou importées d'un code partagé. Les codes publiés par le responsable de l'application sont compilés à distance à partir de sources publiques et de photos envoyées par des festivaliers — personne sur place ne les a vérifiés. Le tableau affiché à l'entrée fait foi.",
+  "Les temps de marche, les alertes de départ et les heures de fin sont des estimations, pas des garanties. L'application n'utilise pas le GPS et ne peut pas savoir où vous vous trouvez. Fiez-vous à votre jugement dans la foule.",
+] as const;
+
+/**
+ * The two French orientation blocks (the app itself stays English — decided,
+ * not deferred: machine-translated screens would be worse than an honest
+ * one-paragraph welcome). Drafted 2026-07-29, native review pending.
+ */
+export const FR_WELCOME_NOTE =
+  "Choisissez vos groupes, comparez vos plans entre amis et gardez l'horaire et la carte hors ligne, même sans signal au parc Jean-Drapeau. C'est gratuit, sans compte — vos données restent sur votre téléphone. L'appli est en anglais.";
+
+export const FR_ABOUT_NOTE =
+  "L'appli est en anglais, mais elle est simple — choisissez vos groupes, repérez les conflits d'horaire, partagez vos plans par code QR ou texte, et tout fonctionne hors ligne au parc Jean-Drapeau. Gratuite et sans compte — vos plans restent sur votre téléphone. Les heures de passage ne sont pas officielles ; le tableau affiché à l'entrée fait foi.";
 
 /**
  * Location id of the festival entrance (see src/data/locations.ts). Used as the

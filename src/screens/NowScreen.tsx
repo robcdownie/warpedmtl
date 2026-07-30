@@ -252,9 +252,11 @@ function PreSchedule({
         </div>
       </Card>
 
-      <p className="px-1 pt-3 text-center text-[11px] leading-relaxed text-muted">
-        {APP_DISCLAIMER}
-      </p>
+      <div className="space-y-2 px-1 pt-3 text-center text-[11px] leading-relaxed text-muted">
+        {APP_DISCLAIMER.map((para) => (
+          <p key={para}>{para}</p>
+        ))}
+      </div>
     </Screen>
   );
 }
