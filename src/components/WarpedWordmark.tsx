@@ -2,7 +2,7 @@ import { cx } from './ui';
 import { APP_NAME } from '@/config/event';
 
 /**
- * Text-based Warped Long Beach wordmark rendered from local fonts + SVG shapes.
+ * Text-based Warped Montréal wordmark rendered from local fonts + SVG shapes.
  * No remote logo images (offline-safe, and avoids copying official artwork).
  */
 export function WarpedWordmark({ className }: { className?: string }) {
@@ -40,7 +40,7 @@ export function WarpedWordmark({ className }: { className?: string }) {
             boxShadow: '1.5px 1.5px 0 #0a0f1c',
           }}
         >
-          LONG BEACH
+          MONTRÉAL
         </span>
       </div>
       <span

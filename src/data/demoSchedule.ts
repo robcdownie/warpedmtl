@@ -1,7 +1,8 @@
 import type { Repo } from '@/db/repo';
-import type { Performance, Selection, DayId, User } from '@/domain/types';
+import type { Artist, Performance, Selection, DayId, User } from '@/domain/types';
 import { STAGES } from './stages';
 import { minutesToHHMM } from '@/domain/time';
+import { artistId, mainPerformanceId } from '@/domain/slug';
 
 // Fictional demo schedule (spec §34). Assigns plausible-looking set times so the
 // interface can be exercised. DEMO ONLY — never shown in production.
@@ -11,8 +12,62 @@ const SLOT_MINUTES = 50; // 45-min sets + 5-min gap
 const DAY_START = 12 * 60; // 12:00
 const DAY_END = 21 * 60 + 30; // 21:30
 
+/**
+ * Fictional demo bands. The public seed ships EMPTY until Montréal's real
+ * lineup drops, but demo mode's whole job is showing the app with data in it —
+ * so it brings its own bill, the same way it brings its own people. Names are
+ * deliberately unbookable: nobody is queuing for Set Change.
+ */
+const DEMO_BANDS: string[] = [
+  'Sound Check',
+  'Set Change',
+  'The Barricades',
+  'Water Refill',
+  'Lost Lanyard',
+  'Merch Line',
+  'The Openers',
+  'Gate Times',
+  'Last Metro Home',
+  'Porta Party',
+  'Amp Static',
+  'Encore Encore',
+];
+
+/** Create the fictional bill (both days) in the given (demo) repo. */
+async function seedDemoLineup(repo: Repo): Promise<void> {
+  const artists: Artist[] = DEMO_BANDS.map((name) => ({
+    id: artistId(name),
+    name,
+    searchAliases: [],
+    category: 'main-lineup',
+  }));
+  await repo.putArtists(artists);
+
+  const bill: Performance[] = [];
+  for (const day of ['saturday', 'sunday'] as DayId[]) {
+    for (const name of DEMO_BANDS) {
+      bill.push({
+        id: mainPerformanceId(day, name),
+        artistId: artistId(name),
+        type: 'main',
+        day,
+        stageId: null,
+        startTime: null,
+        endTime: null,
+        estimatedEndTime: null,
+        scheduleStatus: 'time-pending',
+        officialStatus: 'confirmed',
+        sourceRevision: 0,
+        verifiedAt: null,
+      });
+    }
+  }
+  await repo.putPerformances(bill);
+}
+
 /** Populate a fictional schedule in the given (demo) repo. */
 export async function seedDemoSchedule(repo: Repo): Promise<void> {
+  await seedDemoLineup(repo);
   const all = await repo.allPerformances();
   const updates: Performance[] = [];
 

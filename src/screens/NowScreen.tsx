@@ -7,9 +7,10 @@ import { PlanStatusRow } from '@/components/PlanStatusRow';
 import { useScheduleStatus } from '@/hooks/useScheduleStatus';
 import { usePlanStatuses } from '@/hooks/usePlanStatus';
 import {EVENT, ART, APP_DISCLAIMER } from '@/config/event';
-import { timeUntilFestival } from '@/domain/time';
+import { timeUntilFestival, formatTime, festivalDateRange, festivalDaysLine } from '@/domain/time';
 import { selectedMainByDay } from '@/store/selectors';
 import { plural } from '@/domain/plural';
+import type { DayId } from '@/domain/types';
 import type { TabId } from '@/store/appStore';
 import type { MenuRoute } from '@/components/MenuDrawer';
 import { NowDashboard } from './now/NowDashboard';
@@ -59,8 +60,15 @@ function PreSchedule({
   const performanceById = useApp((s) => s.performanceById);
   const plans = usePlanStatuses();
 
-  const satCount = selectedMainByDay(selections, performanceById, activeUserId, 'saturday').length;
-  const sunCount = selectedMainByDay(selections, performanceById, activeUserId, 'sunday').length;
+  // One stat per festival day, labels derived from EVENT.days — "Bands Fri"
+  // must follow the config, never a hardcoded weekday (string-ban rule).
+  const bandsPerDay = EVENT.days.map((d, i) => ({
+    id: d.id as DayId,
+    label: `Bands ${d.label.slice(0, 3)}`,
+    iconClass: i === 0 ? 'text-warp-pink' : 'text-accent',
+    count: selectedMainByDay(selections, performanceById, activeUserId, d.id as DayId).length,
+  }));
+  const totalPicked = bandsPerDay.reduce((n, d) => n + d.count, 0);
   // Only plans actually on this phone count — a seeded profile is not a friend
   // who has shared anything (plan §P0-2).
   const friendsImported = plans.eligible.filter((u) => u.id !== activeUserId).length;
@@ -69,7 +77,7 @@ function PreSchedule({
 
   return (
     <Screen>
-      {/* Hero banner — generated Long Beach artwork with a legibility scrim */}
+      {/* Hero banner — generated Warped artwork with a legibility scrim */}
       <div className="relative -mx-4 mb-4 overflow-hidden">
         <img
           src={ART.hero}
@@ -87,7 +95,7 @@ function PreSchedule({
           </div>
           <div className="mt-1.5 flex items-center gap-2">
             <span className="rounded bg-warp-yellow px-2 py-0.5 font-display text-[13px] text-warp-ink shadow-[1.5px_1.5px_0_#0a0f1c]">
-              LONG BEACH
+              MONTRÉAL
             </span>
             <span className="font-display text-[15px] text-warp-pink" style={{ textShadow: '1.5px 1.5px 0 #0a0f1c' }}>
               2026
@@ -115,16 +123,18 @@ function PreSchedule({
                 <CountUnit n={cd.minutes} label="min" />
               </div>
             )}
-            <div className="mt-2 text-[12px] text-white/70">July 25–26, 2026</div>
+            <div className="mt-2 text-[12px] text-white/70">{festivalDateRange()}</div>
           </div>
           <div className="p-4">
             <div className="mb-2 flex items-center gap-2 text-warp-pink">
               <Clock size={16} aria-hidden />
-              <span className="text-[12px] font-bold uppercase tracking-wide">Hours</span>
+              <span className="text-[12px] font-bold uppercase tracking-wide">Doors</span>
             </div>
-            <div className="font-display text-[17px]">11:00 AM – 10:00 PM</div>
+            {/* Doors only, on purpose: the close time is unverified fan info
+                and is never displayed (see config/event.ts). */}
+            <div className="font-display text-[17px]">{formatTime(EVENT.festivalHours.opens)}</div>
             <div className="mt-1 text-[12px] text-white/70">
-              Sat Jul 25 &amp; Sun Jul 26
+              {festivalDaysLine('short')}
             </div>
             <div className="text-[12px] text-white/70">{EVENT.venue}</div>
           </div>
@@ -140,8 +150,9 @@ function PreSchedule({
           Your Plan Overview
         </h2>
         <div className="grid grid-cols-4 gap-1 text-center">
-          <Stat Icon={Star} iconClass="text-warp-pink" value={satCount} label="Bands Sat" />
-          <Stat Icon={Star} iconClass="text-accent" value={sunCount} label="Bands Sun" />
+          {bandsPerDay.map((d) => (
+            <Stat key={d.id} Icon={Star} iconClass={d.iconClass} value={d.count} label={d.label} />
+          ))}
           <Stat Icon={Users} iconClass="text-warp-orange" value={friendsImported} label="Friends" />
           {/* A real zero — "--" read as a broken widget next to its siblings. */}
           <Stat Icon={Flag} iconClass="text-warp-ok" value={0} label="Meetups" />
@@ -156,14 +167,14 @@ function PreSchedule({
         </h2>
         <button
           type="button"
-          onClick={() => (satCount + sunCount === 0 ? onGoTab('bands') : onOpenMenu('schedule-io'))}
+          onClick={() => (totalPicked === 0 ? onGoTab('bands') : onOpenMenu('schedule-io'))}
           className="flex w-full items-center gap-3 text-left"
         >
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--surface-sunken)] text-muted">
             <Clock size={22} aria-hidden />
           </span>
           <span className="flex-1">
-            {satCount + sunCount === 0 ? (
+            {totalPicked === 0 ? (
               <>
                 <span className="block text-[14px] font-semibold text-primary">No plan yet</span>
                 <span className="block text-[13px] text-muted">
@@ -173,7 +184,7 @@ function PreSchedule({
             ) : (
               <>
                 <span className="block text-[14px] font-semibold text-primary">
-                  {plural(satCount + sunCount, 'band')} picked — waiting on set times
+                  {plural(totalPicked, 'band')} picked — waiting on set times
                 </span>
                 <span className="block text-[13px] text-muted">
                   Import or enter times and your next set shows here.

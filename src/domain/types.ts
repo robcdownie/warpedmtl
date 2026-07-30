@@ -1,4 +1,4 @@
-// Core data model for Warped Long Beach Companion.
+// Core data model for the Warped MTL Companion.
 // These types mirror the IndexedDB stores and the spec's record shapes.
 
 export type DayId = 'saturday' | 'sunday';

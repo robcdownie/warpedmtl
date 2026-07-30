@@ -81,7 +81,7 @@ export const MapCanvas = forwardRef<
           <div ref={imgWrapRef} className="relative w-full" onClick={handleTap}>
             <img
               src={MAP_IMAGE_URL}
-              alt="Vans Warped Long Beach festival map"
+              alt="Festival map — reference layout"
               className="block w-full select-none"
               draggable={false}
             />

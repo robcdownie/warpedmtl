@@ -10,6 +10,7 @@ import {
   formatTime,
   hhmmToMinutes,
   getNow,
+  dayLabel,
 } from '@/domain/time';
 import { STAGES } from '@/data/stages';
 import type { Artist, DayId, Performance } from '@/domain/types';
@@ -281,7 +282,7 @@ export function BoardEntry() {
               day === d ? 'bg-[var(--chip-on)] text-white shadow-sm' : 'text-secondary',
             )}
           >
-            {d === 'saturday' ? 'Saturday' : 'Sunday'}
+            {dayLabel(d)}
           </button>
         ))}
       </div>
@@ -378,7 +379,7 @@ export function BoardEntry() {
         <p className="mb-2 font-display text-[17px] leading-tight text-primary">
           {locationById.get(stageId)?.name ?? 'Stage'}
           <span className="ml-1.5 font-sans text-[12px] font-normal text-muted">
-            {day === 'saturday' ? 'Saturday' : 'Sunday'}
+            {dayLabel(day)}
             {isUnplugged
               ? ' · sets the day too'
               : ` · ${column.length} set${column.length === 1 ? '' : 's'}`}
@@ -509,7 +510,7 @@ export function BoardEntry() {
           <div className="mt-2">
             <p className="flex items-start gap-1.5 text-[12px] text-warn">
               <AlertTriangle size={13} className="mt-0.5 shrink-0" aria-hidden />
-              No {isUnplugged ? 'unplugged' : day === 'saturday' ? 'Saturday' : 'Sunday'} band
+              No {isUnplugged ? 'unplugged' : dayLabel(day)} band
               matches “{bandQuery.trim()}” — check the spelling, or add it as a late addition.
             </p>
             <button

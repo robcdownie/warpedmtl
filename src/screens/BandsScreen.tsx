@@ -188,12 +188,11 @@ export function BandsScreen() {
 
         {/* Filter chips */}
         <div className="no-scrollbar scroll-fade-r -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
-          <Chip active={day === 'saturday'} onClick={() => setDay(day === 'saturday' ? null : 'saturday')}>
-            Sat
-          </Chip>
-          <Chip active={day === 'sunday'} onClick={() => setDay(day === 'sunday' ? null : 'sunday')}>
-            Sun
-          </Chip>
+          {(['saturday', 'sunday'] as DayId[]).map((d) => (
+            <Chip key={d} active={day === d} onClick={() => setDay(day === d ? null : d)}>
+              {dayLabel(d).slice(0, 3)}
+            </Chip>
+          ))}
           <Divider />
           <Chip active={selState === 'selected'} onClick={() => setSelState(selState === 'selected' ? null : 'selected')}>
             Selected

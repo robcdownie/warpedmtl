@@ -1,17 +1,45 @@
 import { describe, it, expect } from 'vitest';
-import { buildSeed } from './seed';
+import { buildSeed, type SeedLists } from './seed';
 import { SATURDAY_ARTISTS } from './artists-saturday';
 import { SUNDAY_ARTISTS } from './artists-sunday';
 import { UNPLUGGED_APPEARANCES } from './artists-unplugged';
 
-describe('seed data integrity (spec §33)', () => {
-  const { artists, performances } = buildSeed();
+/**
+ * The shipped Montréal seed is deliberately EMPTY of bands: the official day
+ * split is unpublished, and shipping another city's lineup as if it were the
+ * bill is exactly the kind of confident fiction this app refuses. The
+ * mechanism tests below therefore run on fixture lists — the machinery has to
+ * keep working for the day the real lineup lands
+ * (festival-blueprint/montreal/lineup-staging.md).
+ */
+describe('shipped seed state (Montréal, pre-lineup)', () => {
+  it('ships no bands until the day split is published', () => {
+    expect(SATURDAY_ARTISTS).toHaveLength(0);
+    expect(SUNDAY_ARTISTS).toHaveLength(0);
+    expect(UNPLUGGED_APPEARANCES).toHaveLength(0);
+    const { artists, performances, locations } = buildSeed();
+    expect(artists).toHaveLength(0);
+    expect(performances).toHaveLength(0);
+    // Stages and map pins still seed — the board and map work lineup-less.
+    expect(locations.length).toBeGreaterThan(0);
+  });
+});
+
+describe('seed mechanics (fixture lineup — spec §33)', () => {
+  // 'Shared Act' plays a main day AND unplugged; 'Both Days' plays both main
+  // days — together they exercise every artist-dedup path buildSeed has.
+  const FIXTURES: SeedLists = {
+    saturday: ['Both Days', 'Solo Friday', 'Shared Act'],
+    sunday: ['Both Days', 'Solo Saturday'],
+    unplugged: ['Shared Act', 'Unplugged Only'],
+  };
+  const { artists, performances } = buildSeed(FIXTURES);
 
   it('every main artist appears exactly once per day (acceptance §13-14)', () => {
     const satMain = performances.filter((p) => p.type === 'main' && p.day === 'saturday');
     const sunMain = performances.filter((p) => p.type === 'main' && p.day === 'sunday');
-    expect(satMain).toHaveLength(SATURDAY_ARTISTS.length);
-    expect(sunMain).toHaveLength(SUNDAY_ARTISTS.length);
+    expect(satMain).toHaveLength(FIXTURES.saturday.length);
+    expect(sunMain).toHaveLength(FIXTURES.sunday.length);
     // unique performance ids
     expect(new Set(performances.map((p) => p.id)).size).toBe(performances.length);
   });
@@ -37,16 +65,24 @@ describe('seed data integrity (spec §33)', () => {
       expect(p.day).toBeNull();
     }
     expect(performances.filter((p) => p.type === 'unplugged')).toHaveLength(
-      UNPLUGGED_APPEARANCES.length,
+      FIXTURES.unplugged.length,
     );
   });
 
-  it('shared performers (e.g. Hawthorne Heights) have both main and unplugged performances', () => {
-    const hawthorne = artists.find((a) => a.name === 'Hawthorne Heights');
-    expect(hawthorne).toBeDefined();
-    const perfs = performances.filter((p) => p.artistId === hawthorne!.id);
+  it('a performer on both a main day and unplugged keeps one artist record', () => {
+    const shared = artists.filter((a) => a.name === 'Shared Act');
+    expect(shared).toHaveLength(1);
+    expect(shared[0].category).toBe('main-lineup');
+    const perfs = performances.filter((p) => p.artistId === shared[0].id);
     expect(perfs.some((p) => p.type === 'main')).toBe(true);
     expect(perfs.some((p) => p.type === 'unplugged')).toBe(true);
+  });
+
+  it('a performer on both main days keeps one artist record, two performances', () => {
+    const both = artists.filter((a) => a.name === 'Both Days');
+    expect(both).toHaveLength(1);
+    const days = performances.filter((p) => p.artistId === both[0].id).map((p) => p.day);
+    expect(days.sort()).toEqual(['saturday', 'sunday']);
   });
 
   it('all main performances start time-pending with no stage/time', () => {

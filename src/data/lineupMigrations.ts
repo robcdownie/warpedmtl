@@ -1,6 +1,7 @@
 import type { Repo } from '@/db/repo';
 import type { DayId, Performance, Selection } from '@/domain/types';
 import { artistId, mainPerformanceId, unpluggedPerformanceId } from '@/domain/slug';
+import { dayLabel } from '@/domain/time';
 
 /**
  * Safe lineup corrections (plan §P0-7).
@@ -158,7 +159,7 @@ async function applyChange(
     return {
       revision,
       message:
-        `Lineup update: ${change.artist} moved from ${label(change.from)} to ${label(change.to)}. ` +
+        `Lineup update: ${change.artist} moved from ${dayLabel(change.from)} to ${dayLabel(change.to)}. ` +
         'Your pick moved with them — their set time needs re-entering.',
       affectedUserIds: affected,
       ts,
@@ -183,24 +184,22 @@ async function applyChange(
       revision,
       message:
         change.kind === 'cancel'
-          ? `Lineup update: ${change.artist} cancelled their ${label(change.day)} set. Your pick is kept but marked cancelled.`
-          : `Lineup update: ${change.artist} was removed from ${label(change.day)}. Your saved priority and notes were preserved.`,
+          ? `Lineup update: ${change.artist} cancelled their ${dayLabel(change.day)} set. Your pick is kept but marked cancelled.`
+          : `Lineup update: ${change.artist} was removed from ${dayLabel(change.day)}. Your saved priority and notes were preserved.`,
       affectedUserIds: affected,
       ts,
     };
   }
 
   // 'add' — seedDatabase creates the row; this just tells the user.
+  // Day names route through dayLabel(): ids are storage tokens and Montréal's
+  // 'saturday' renders as Friday (see the day-token warning in config/event.ts).
   return {
     revision,
-    message: `Lineup update: ${change.artist} was added to ${label(change.day)}.`,
+    message: `Lineup update: ${change.artist} was added to ${dayLabel(change.day)}.`,
     affectedUserIds: [],
     ts,
   };
-}
-
-function label(day: DayId): string {
-  return day === 'saturday' ? 'Saturday' : 'Sunday';
 }
 
 /**

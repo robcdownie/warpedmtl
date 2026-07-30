@@ -1,37 +1,7 @@
-// Warped Unplugged & special appearances (spec §12). Verbatim list.
-// Performers already in the main lineup reuse the existing artist record
-// (matched by name during seeding); the rest become category 'unplugged-special'.
-export const UNPLUGGED_APPEARANCES: string[] = [
-  'Addie Addie Addie',
-  'Anna Valenzuela',
-  'ARC (Rob Woronoff)',
-  'Bad Cop Bad Cop',
-  'Beebs',
-  'Ben Lapidus',
-  'Brandie Posey',
-  'Brian King Joseph',
-  'Corook',
-  'Dylan (Pass The Bass)',
-  'Gloria Alexander',
-  'Hawthorne Heights',
-  'Humane World for Animals',
-  'Kendra Morris',
-  'Larry & His Flask',
-  'letlive.',
-  'Life of the Party',
-  'Mad Caddies',
-  'Maya (Hearts Of Maya)',
-  'Micky Bang',
-  'Monique Powell - Save Ferris',
-  'MyVerse',
-  'Particle Kid',
-  'Ruby Leigh',
-  'SULLVN featuring DICKY BARRETT',
-  'Shaney Jo (Keep A Breast)',
-  'Shira Yevin (Gritty In Pink)',
-  'The Aggrolites',
-  'The Bala Heads + Katy J',
-  'The Street Sweepers (Andrew Ocelot)',
-  'Toni Nagy',
-  'Water Tower',
-];
+// Warped Unplugged & special appearances. Performers already in the main
+// lineup reuse the existing artist record (matched by name during seeding);
+// the rest become category 'unplugged-special'.
+//
+// Empty on purpose until Montréal's Unplugged roster is announced — same
+// no-other-city's-bands rule as artists-saturday.ts.
+export const UNPLUGGED_APPEARANCES: string[] = [];

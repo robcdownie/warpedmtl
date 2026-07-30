@@ -3,7 +3,7 @@
 // seed -> IndexedDB -> schedule edit -> conflict engine -> export/import.
 // Run: npm run build && node scripts/verify-e2e.mjs
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, dirname, extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,7 +20,7 @@ import { chromium, webkit, devices } from '@playwright/test';
  * domain/time.ts), which would otherwise fail every check here from that
  * minute on — including the ones gating deploys.
  */
-const HARNESS_NOW = new Date('2026-07-25T14:00:00-07:00');
+const HARNESS_NOW = new Date('2026-08-21T14:00:00-04:00'); // mid-festival, day one, EDT
 
 async function pinClock(page) {
   await page.clock.install({ time: HARNESS_NOW });
@@ -29,7 +29,7 @@ async function pinClock(page) {
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(root, 'dist');
-const BASE = '/warpedLB/';
+const BASE = '/warpedmtl/';
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.woff': 'font/woff', '.woff2': 'font/woff2' };
 
 function serve() {
@@ -67,6 +67,47 @@ const HARNESS_USERS = [
   { id: 'sam', name: 'Sam', initials: 'S', avatar: null, colorKey: 'blue' },
   { id: 'jordan', name: 'Jordan', initials: 'J', avatar: null, colorKey: 'orange' },
 ];
+
+/**
+ * The public build also ships with an EMPTY lineup — Montréal's official day
+ * split is unpublished, and this instance refuses to carry another city's
+ * bands (the string ban enforces it). So, exactly like the roster, the
+ * harness brings its own bill. Ids are hand-rolled and prefixed 'hx-';
+ * nothing here rides the real slug pipeline. Day ids are storage tokens:
+ * 'saturday' renders as Friday, 'sunday' as Saturday (config/event.ts).
+ */
+const HARNESS_LINEUP = (() => {
+  const slug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const bill = {
+    saturday: ['Stand-In Parade', 'The Fixtures', 'Rain Delay', 'Load-In'],
+    sunday: ['Sound Check', 'Placeholder Party', 'Barricade'],
+  };
+  const artists = [];
+  const performances = [];
+  for (const [day, names] of Object.entries(bill)) {
+    for (const name of names) {
+      const id = `hx-${slug(name)}`;
+      if (!artists.some((a) => a.id === id)) {
+        artists.push({ id, name, searchAliases: [], category: 'main-lineup' });
+      }
+      performances.push({
+        id: `hx-main-${day}-${slug(name)}`,
+        artistId: id,
+        type: 'main',
+        day,
+        stageId: null,
+        startTime: null,
+        endTime: null,
+        estimatedEndTime: null,
+        scheduleStatus: 'time-pending',
+        officialStatus: 'confirmed',
+        sourceRevision: 0,
+        verifiedAt: null,
+      });
+    }
+  }
+  return { artists, performances };
+})();
 
 /**
  * First run shows the welcome flow; the harness drives the app behind it.
@@ -170,10 +211,29 @@ async function functionalPass(base) {
   const onboardingSticks = await page.evaluate(() => window.__WLB__.settings().onboardingComplete);
   check('onboarding completion is stored', onboardingSticks);
 
-  // 1. Seed loaded.
+  // 1. THE SECOND PUBLIC-BUILD GUARANTEE: no lineup ships either. The day
+  // split is unpublished, so a fresh install must have zero bands — the
+  // string ban keeps Long Beach's out of the bundle, and this keeps anything
+  // else out of the database. Then seed the harness bill so the schedule and
+  // conflict flows below have something to drive.
   const counts = await page.evaluate(() => window.__WLB__.counts());
-  check('seed: 151 main performances', counts.main === 151, `main=${counts.main}`);
+  check(
+    'a fresh install ships no lineup (day split unpublished)',
+    counts.main === 0 && counts.unplugged === 0 && counts.artists === 0,
+    `main=${counts.main} unplugged=${counts.unplugged} artists=${counts.artists}`,
+  );
   check('profiles are created, not seeded', counts.users === 3, `users=${counts.users}`);
+
+  await page.evaluate(
+    (lineup) => window.__WLB__.seedLineup(lineup.artists, lineup.performances),
+    HARNESS_LINEUP,
+  );
+  const seeded = await page.evaluate(() => window.__WLB__.counts());
+  check(
+    'harness lineup seeded (4 Friday + 3 Saturday sets)',
+    seeded.main === HARNESS_LINEUP.performances.length,
+    `main=${seeded.main}`,
+  );
 
   // 1b. A profile can be added and removed from inside the app. The roster is
   // now user-managed, so this is load-bearing rather than cosmetic.
@@ -212,8 +272,8 @@ async function functionalPass(base) {
   check('schedule persisted to IndexedDB', conflictInfo.scheduleLoaded, `loaded=${conflictInfo.scheduleLoaded}`);
   check('must-see overlap conflict detected', conflictInfo.hasMustSee, `total conflicts=${conflictInfo.total}`);
 
-  // 2b. PARTIAL SCHEDULE (plan §P0-1) — two of ~76 Saturday sets entered must
-  // read as partial, never as a loaded schedule.
+  // 2b. PARTIAL SCHEDULE (plan §P0-1) — two of the four fixture sets on day
+  // 'saturday' entered must read as partial, never as a loaded schedule.
   const partial = await page.evaluate(() => {
     const W = window.__WLB__;
     const status = W.scheduleStatus();
@@ -246,12 +306,14 @@ async function functionalPass(base) {
   // The partial-schedule warning is on screen, not just in the model.
   await page.click('nav[aria-label="Primary"] button[aria-label="Schedule"]');
   await page.waitForTimeout(400);
-  // Ask for My Day and Saturday explicitly. The tab now opens on Enter Times
-  // when today's board isn't entered, and the day toggle follows today — so
-  // without these two clicks, which view loads depends on the date.
+  // Ask for My Day and the partial day explicitly. The tab now opens on Enter
+  // Times when today's board isn't entered, and the day toggle follows today —
+  // so without these two clicks, which view loads depends on the date. The
+  // partial day is id 'saturday', which RENDERS as Friday (labels come from
+  // EVENT.days; ids are storage tokens) — so the button says Friday.
   await page.click('button:has-text("My Day")').catch(() => {});
   await page.waitForTimeout(300);
-  await page.click('button:text-is("Saturday")').catch(() => {});
+  await page.click('button:text-is("Friday")').catch(() => {});
   await page.waitForTimeout(300);
   const partialCopy = await page
     .waitForSelector('text=/Partial schedule/i', { timeout: 4000 })
@@ -709,10 +771,62 @@ async function renderPass(base, cfg) {
   prefix = '';
 }
 
+/**
+ * Built-bundle string ban. Montréal runs Friday/Saturday, donations moved off
+ * Venmo, and the Long Beach identity must not survive a rebuild — so the
+ * BUILT output (not the source) is scanned for four strings that would each
+ * mean a regression shipped:
+ *
+ *   "Sunday"     — case-SENSITIVE on purpose. Lowercase 'sunday' is a legacy
+ *                  storage token and belongs in the bundle forever; a
+ *                  capital-S Sunday can only be display copy, and Montréal
+ *                  has no Sunday.
+ *   "Long Beach" — case-insensitive (catches the all-caps hero tags too).
+ *   "July 25"    — case-insensitive; the old city's dates.
+ *   "venmo.com"  — the old payment rail; everything routes via donate.html.
+ *
+ * When this trips, fix the SOURCE — never this list. One known future
+ * exception: if Taking Back Sunday lands with the real Montréal lineup, teach
+ * the Sunday check that one band name (and only that) — the procedure is
+ * written in festival-blueprint/montreal/lineup-staging.md §3 step 6.
+ */
+const BANNED_STRINGS = [
+  { label: 'Sunday', re: /Sunday/ }, // case-sensitive on purpose — see above
+  { label: 'Long Beach', re: /long beach/i },
+  { label: 'July 25', re: /july 25/i },
+  { label: 'venmo.com', re: /venmo\.com/i },
+];
+
+async function stringBanPass() {
+  const files = [join(DIST, 'index.html'), join(DIST, 'manifest.webmanifest')];
+  const assetNames = await readdir(join(DIST, 'assets')).catch(() => []);
+  for (const name of assetNames) {
+    if (/\.(js|css)$/.test(name)) files.push(join(DIST, 'assets', name));
+  }
+  const texts = await Promise.all(
+    files.map(async (f) => ({
+      name: f.slice(DIST.length + 1).replace(/\\/g, '/'),
+      text: await readFile(f, 'utf8').catch(() => ''),
+    })),
+  );
+  for (const banned of BANNED_STRINGS) {
+    const offenders = texts.filter((t) => banned.re.test(t.text));
+    const where = offenders
+      .map((o) => {
+        const i = o.text.search(banned.re);
+        const from = Math.max(0, i - 30);
+        return `${o.name} "…${o.text.slice(from, i + banned.label.length + 30).replace(/\s+/g, ' ')}…"`;
+      })
+      .join('; ');
+    check(`built bundle never contains "${banned.label}"`, offenders.length === 0, where);
+  }
+}
+
 async function main() {
   const srv = await serve();
   const base = 'http://localhost:' + srv.address().port + BASE;
   try {
+    await stringBanPass();
     await functionalPass(base);
     for (const cfg of RENDER_MATRIX) await renderPass(base, cfg);
   } finally {

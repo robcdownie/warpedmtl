@@ -5,11 +5,11 @@ The app installs to your Home Screen and then runs fully offline. Do this **once
 ## Steps
 
 1. Open **Safari** on your iPhone (must be Safari — Chrome/Instagram/in-app browsers can't install a PWA on iOS).
-2. Go to: **https://robcdownie.github.io/warpedLB/**
+2. Go to: **https://robcdownie.github.io/warpedmtl/**
 3. Wait a few seconds. The header should show **“Ready for offline use.”** If it doesn't, open the **menu (≡) → Offline Test** and make sure every essential row is green.
 4. Tap the **Share** button (the square with an up-arrow).
 5. Scroll down and tap **Add to Home Screen**, then **Add**.
-6. Close Safari. Open the app from the new **Warped LB** Home Screen icon.
+6. Close Safari. Open the app from the new **Warped MTL** Home Screen icon.
 7. While you still have signal, tap around once (open the Map so the image caches). Now it's fully cached.
 
 ## Confirm it works offline

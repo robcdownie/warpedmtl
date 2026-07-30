@@ -4,7 +4,7 @@ import { Screen, Card, Button } from '@/components/ui';
 import { usePlanStatuses } from '@/hooks/usePlanStatus';
 import { buildWrapUp } from '@/domain/wrapUp';
 import { formatTime } from '@/domain/time';
-import { ART } from '@/config/event';
+import { ART, BASE_URL } from '@/config/event';
 import type { MenuRoute } from '@/components/MenuDrawer';
 
 /**
@@ -75,7 +75,7 @@ export function WrapUpScreen({
           </div>
           <div className="mt-1.5 flex items-center gap-2">
             <span className="rounded bg-warp-yellow px-2 py-0.5 font-display text-[13px] text-warp-ink shadow-[1.5px_1.5px_0_#0a0f1c]">
-              LONG BEACH
+              MONTRÉAL
             </span>
             <span
               className="font-display text-[15px] text-warp-pink"
@@ -91,7 +91,7 @@ export function WrapUpScreen({
         <Card className="mb-4 p-4">
           <h2 className="font-display text-[17px] text-primary">Thank you for using this</h2>
           <p className="mt-1.5 text-[13px] leading-relaxed text-secondary">
-            Warped Long Beach is done, and so is the planning half of this app — the schedule, map,
+            Warped Montréal is done, and so is the planning half of this app — the schedule, map,
             group and conflict screens have gone with it. What&apos;s left is your weekend and a way
             to say thanks.
           </p>
@@ -135,7 +135,7 @@ export function WrapUpScreen({
             */}
             <p className="mt-3 rounded-lg bg-[var(--surface-sunken)] px-3 py-2 text-[12px] leading-relaxed text-secondary">
               This is what you <em>planned</em>. The app never tracked where you actually were, so
-              whether you made it to all of them is between you and the corndogs.
+              whether you made it to all of them is between you and the poutine.
             </p>
           </Card>
 
@@ -181,21 +181,21 @@ export function WrapUpScreen({
       )}
 
       <Card className="mb-4 border-warp-pink/40 bg-warp-pink/5 p-4">
-        <h2 className="font-display text-[17px] text-primary">Help me recover from my corndogs</h2>
+        <h2 className="font-display text-[17px] text-primary">Help me recover from the poutine</h2>
         <p className="mt-1.5 text-[13px] leading-relaxed text-secondary">
           This app was free, had no ads, and never sent your plans anywhere. If it earned its keep
           this weekend, you can chip in toward the damage a festival weekend does to a person.
         </p>
         <a
-          href="https://venmo.com/u/robbie-downie"
+          href={`${BASE_URL}donate.html`}
           target="_blank"
           rel="noreferrer noopener"
           className="mt-3 flex min-h-touch items-center justify-center rounded-lg bg-warp-pink px-4 font-display text-[15px] text-white active:bg-warp-pink-dark"
         >
-          Venmo @robbie-downie
+          Chip in
         </a>
         <p className="mt-2 text-center text-[11px] text-muted">
-          Opens Venmo — needs a connection, unlike the rest of the app.
+          Opens the tip jar in your browser — needs a connection, unlike the rest of the app.
         </p>
       </Card>
 

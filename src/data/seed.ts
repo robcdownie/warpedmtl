@@ -41,11 +41,26 @@ export interface SeedBundle {
   locations: MapLocation[];
 }
 
+/** The three name lists a lineup is built from, injectable for tests. */
+export interface SeedLists {
+  saturday: string[];
+  sunday: string[];
+  unplugged: string[];
+}
+
+const SHIPPED_LISTS: SeedLists = {
+  saturday: SATURDAY_ARTISTS,
+  sunday: SUNDAY_ARTISTS,
+  unplugged: UNPLUGGED_APPEARANCES,
+};
+
 /**
- * Build the full canonical dataset from the verbatim spec lists. Pure function
- * (no IO) so it can also be used for validation/testing.
+ * Build the full canonical dataset from the verbatim announced lists. Pure
+ * function (no IO) so it can also be used for validation/testing. The shipped
+ * Montréal lists are empty until the day split drops, so tests pass fixture
+ * lists to keep the dedup/id rules exercised in the meantime.
  */
-export function buildSeed(): SeedBundle {
+export function buildSeed(lists: SeedLists = SHIPPED_LISTS): SeedBundle {
   const artists = new Map<string, Artist>();
   const performances: Performance[] = [];
 
@@ -57,8 +72,8 @@ export function buildSeed(): SeedBundle {
     return id;
   }
 
-  // Main lineup — Saturday.
-  for (const name of SATURDAY_ARTISTS) {
+  // Main lineup — day id 'saturday' (renders as day one's label).
+  for (const name of lists.saturday) {
     const aId = ensureArtist(name, 'main-lineup');
     performances.push({
       id: mainPerformanceId('saturday', name),
@@ -76,8 +91,8 @@ export function buildSeed(): SeedBundle {
     });
   }
 
-  // Main lineup — Sunday.
-  for (const name of SUNDAY_ARTISTS) {
+  // Main lineup — day id 'sunday' (renders as day two's label).
+  for (const name of lists.sunday) {
     const aId = ensureArtist(name, 'main-lineup');
     performances.push({
       id: mainPerformanceId('sunday', name),
@@ -97,7 +112,7 @@ export function buildSeed(): SeedBundle {
 
   // Warped Unplugged & special appearances. Reuse existing artist record when the
   // name already exists in the main lineup; otherwise create an 'unplugged-special'.
-  for (const name of UNPLUGGED_APPEARANCES) {
+  for (const name of lists.unplugged) {
     const id = artistId(name);
     const category = artists.has(id) ? artists.get(id)!.category : 'unplugged-special';
     const aId = ensureArtist(name, category);

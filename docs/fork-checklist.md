@@ -54,25 +54,40 @@ Status keys below reflect the Montréal fork: **[x]** done in S1 (identity),
 
 ## 2. Copy + rails sweep (S2)
 
-- [A2] Day-label ternaries → `dayLabel()` from `domain/time.ts`. Known sites:
-  `GroupScreen.tsx` tabs, `ScheduleEditor.tsx` tabs, `lineupMigrations.ts`
-  `label()`, `NowScreen.tsx` date strings + "Bands Sat/Sun" stat labels,
-  `emergency.ts` header, `ScheduleProvenance` day-named renders.
-- [A2] Rendered city strings: `WarpedWordmark.tsx` ("LONG BEACH" SVG text),
-  `NowScreen.tsx` hero, `WrapUpScreen.tsx` hero tag + wrap-up copy,
-  `FriendsScreen.tsx` export filename prefix (`warpedlb-…`).
-- [A2] Map-provenance honesty copy: `settings.ts` + `MapSetupScreen.tsx`
-  still describe the previous city's hand-traced map; make the wording match
-  what actually ships (placeholder vs new art).
-- [A2] Donation rail: `AboutScreen.tsx` + `WrapUpScreen.tsx` links →
-  `public/donate.html` meta-refresh redirect (founder pastes the live
-  Ko-fi/tip URL; agents never hold it).
-- [A2] Harness: `verify-e2e.mjs` `HARNESS_NOW` → mid-festival in the new
-  zone, `BASE` → new path; add the built-bundle string ban (old city name,
-  old dates, old weekday labels, old payment rail) so regressions fail CI.
-- [A2] `scripts/shots.mjs` `BASE` (screenshot harness serves the build from
-  the Pages path).
-- [A2] Docs + README: live-app URLs and city references in `README.md`,
+- [x] Day-label ternaries → `dayLabel()` from `domain/time.ts`. Full site
+  list (grep `'Saturday' : 'Sunday'` to re-find them): `GroupScreen.tsx`,
+  `ScheduleScreen.tsx` `DayToggle`, `BoardEntry.tsx` ×3 (day toggle, column
+  header, no-match warning), `ScheduleEditor.tsx` completion line + Sat/Sun
+  `DayTab`s (abbreviate with `dayLabel(d).slice(0, 3)`), `BandsScreen.tsx`
+  Sat/Sun filter chips, `lineupMigrations.ts` `label()`, `emergency.ts`
+  header. `ScheduleStatusStrip`/`wrapUp.ts` already used `dayLabel`/labels.
+- [x] Rendered date strings → new `festivalDateRange()` /
+  `festivalDaysLine()` helpers in `domain/time.ts`, derived from
+  `EVENT.days`: `NowScreen.tsx` countdown + doors sublines (close time is
+  never displayed — it's unverified; the Hours card became a Doors card),
+  "Bands Fri/Sat" stat labels mapped over `EVENT.days`, `AboutScreen.tsx`
+  event dates. Their pins in `time.test.ts` re-anchor per fork.
+- [x] Rendered city strings: `WarpedWordmark.tsx` ("LONG BEACH" text tag →
+  MONTRÉAL), `NowScreen.tsx` hero, `WrapUpScreen.tsx` hero tag + wrap-up
+  copy, `FriendsScreen.tsx` export filename prefix (`warpedlb-…` →
+  `warpedmtl-…`), `MapCanvas.tsx` img alt, `types.ts`/`theme.css` headers,
+  food jokes localized (corndogs → poutine).
+- [x] Map-provenance honesty copy: `settings.ts` + `MapSetupScreen.tsx` +
+  `docs/trust-states.md` + `docs/replace-map.md` now say "reference layout,
+  not yet drawn or calibrated for this venue" — placeholder-accurate until
+  real map art ships.
+- [x] Donation rail: `AboutScreen.tsx` + `WrapUpScreen.tsx` links →
+  `${BASE_URL}donate.html` ("Chip in"), new `public/donate.html`
+  meta-refresh redirect (founder pastes the live Ko-fi URL; agents never
+  hold it). Venmo-specific copy removed everywhere.
+- [x] Harness: `verify-e2e.mjs` `HARNESS_NOW` → mid-festival day one in the
+  new zone, `BASE` → new path; **built-bundle string ban** added (`Sunday`
+  case-sensitive — lowercase day ids are storage tokens and stay; `Long
+  Beach`, `July 25`, `venmo.com` case-insensitive). The functional pass's
+  day-toggle click targets the day-one LABEL (Friday), not the id.
+- [x] `scripts/shots.mjs` `BASE`, contact-sheet titles, and its seeded pass
+  (now brings its own fixture bill — see the lineup note below).
+- [x] Docs + README: live-app URLs and city references in `README.md`,
   `docs/README.md`, `docs/install.md`, `docs/replace-map.md`,
   `docs/trust-states.md`.
 
@@ -86,9 +101,20 @@ Status keys below reflect the Montréal fork: **[x]** done in S1 (identity),
   math falls back to it, so they must move together).
 - [A3] Seed-dependent tests: `seed.test.ts` counts; `leaveBy.test.ts` /
   `meetups.test.ts` reference seeded location names.
-- [A3] Lineup: NOT seeded until the official day split drops —
-  `artists-saturday.ts` / `artists-sunday.ts` still hold the old city's bands
-  until then (harmless pre-launch; the board is empty either way).
+- [x] Lineup: NOT seeded until the official day split drops. **Done in S2,
+  not S3, and not "harmless to keep":** the old city's bands are string
+  literals in the built bundle, and Long Beach's bill included Taking Back
+  Sunday — which trips the `Sunday` string ban. So `artists-saturday.ts` /
+  `artists-sunday.ts` / `artists-unplugged.ts` ship EMPTY, and everything
+  that needed a lineup brings its own: the e2e harness seeds a fixture bill
+  through the new `__WLB__.seedLineup()` debug hook (same pattern as
+  `HARNESS_USERS`), demo mode ships obviously-fictional bands in
+  `demoSchedule.ts`, `seed.test.ts` runs the dedup mechanics on fixture
+  lists via `buildSeed(lists)`, and `shots.mjs` seeds its own five. When the
+  real lineup lands (fill procedure:
+  `festival-blueprint/montreal/lineup-staging.md`), note its §3 step 6: the
+  ban needs the one Taking Back Sunday exception taught to it THEN — never
+  pre-emptively.
 - [A3] Ship: full gate (`npm test` + `verify-e2e`), push to `main`
   (`deploy.yml` fires on push and gates on the same suites), enable Pages,
   verify the live URL + string ban against the served bundle.

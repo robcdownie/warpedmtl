@@ -248,7 +248,7 @@ export function FriendsScreen() {
       <Sheet open={exporting} onClose={() => setExporting(false)} title={`${activeUser?.name ?? 'Your'} bands`}>
         <ExportPanel
           code={exportCode}
-          filename={`warpedlb-${activeUser?.id ?? 'me'}-selections-${timestampSlug()}.json`}
+          filename={`warpedmtl-${activeUser?.id ?? 'me'}-selections-${timestampSlug()}.json`}
           hint="Your friend opens Import a friend and scans this."
         />
       </Sheet>

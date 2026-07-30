@@ -1,6 +1,6 @@
 # Replacing the festival map image
 
-The map is the real Warped Long Beach festival map. If an updated map is released, swap the image and re-check the pin positions.
+The shipped map is a reference layout, not yet drawn or calibrated for this venue. When real map art exists (or an official map is released to reference for geography — never trace a published map), swap the image and re-check the pin positions.
 
 ## Swap the image
 

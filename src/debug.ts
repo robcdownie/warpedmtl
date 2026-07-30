@@ -10,7 +10,7 @@ import { allDaysScheduleInfo } from '@/domain/scheduleStatus';
 import { allPlanInfo } from '@/domain/planStatus';
 import { positionWithCheckin } from '@/domain/positions';
 import { repoFor } from '@/db/repo';
-import type { DayId, Performance, Priority } from '@/domain/types';
+import type { Artist, DayId, Performance, Priority } from '@/domain/types';
 
 export function installDebugHook() {
   const api = {
@@ -113,6 +113,19 @@ export function installDebugHook() {
      * pass its id, or App.tsx will bounce straight back to onboarding.
      */
     completeOnboarding: (userId: string) => useApp.getState().completeOnboarding(userId),
+    /**
+     * Seed a lineup into the current mode's repo. The public build ships
+     * with no bands at all until Montréal's official day split drops, so the
+     * harness brings its own bill before driving the schedule flows — the
+     * same reason it creates its own profiles.
+     */
+    seedLineup: async (artists: Artist[], performances: Performance[]) => {
+      const s = useApp.getState();
+      const repo = repoFor(s.mode);
+      await repo.putArtists(artists);
+      await repo.putPerformances(performances);
+      await s.reloadAll();
+    },
     resetSchedule: async () => {
       const s = useApp.getState();
       const repo = repoFor(s.mode);

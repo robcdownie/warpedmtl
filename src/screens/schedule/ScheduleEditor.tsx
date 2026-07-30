@@ -6,6 +6,7 @@ import { PerfRowEditor } from './PerfRowEditor';
 import { scheduleCompletion } from '@/store/selectors';
 import { searchArtists } from '@/domain/matching';
 import { STAGES } from '@/data/stages';
+import { dayLabel } from '@/domain/time';
 import type { DayId, Performance } from '@/domain/types';
 
 type Layout = 'assign' | 'timeline';
@@ -64,7 +65,7 @@ export function ScheduleEditor() {
       <div className="mb-3">
         <div className="mb-1 flex items-center justify-between text-[12px] text-secondary">
           <span>
-            {day === 'saturday' ? 'Saturday' : 'Sunday'}: {completion.scheduled}/{completion.total} sets
+            {dayLabel(day)}: {completion.scheduled}/{completion.total} sets
           </span>
           <span>Overall {overall.percent}%</span>
         </div>
@@ -79,8 +80,11 @@ export function ScheduleEditor() {
       {/* Day + layout + undo */}
       <div className="mb-3 flex items-center gap-2">
         <div className="flex rounded-xl bg-[var(--surface-sunken)] p-0.5">
-          <DayTab active={day === 'saturday'} onClick={() => setDay('saturday')}>Sat</DayTab>
-          <DayTab active={day === 'sunday'} onClick={() => setDay('sunday')}>Sun</DayTab>
+          {(['saturday', 'sunday'] as DayId[]).map((d) => (
+            <DayTab key={d} active={day === d} onClick={() => setDay(d)}>
+              {dayLabel(d).slice(0, 3)}
+            </DayTab>
+          ))}
         </div>
         <div className="flex rounded-xl bg-[var(--surface-sunken)] p-0.5">
           <IconTab active={layout === 'assign'} onClick={() => setLayout('assign')} label="Artist list">

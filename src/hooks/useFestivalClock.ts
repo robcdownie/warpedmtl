@@ -7,7 +7,7 @@ const OPEN = hhmmToMinutes(EVENT.festivalHours.opens);
 
 export interface FestivalClock {
   now: Date;
-  /** The day being shown: today if it's a festival day, else Saturday. */
+  /** The day being shown: today if it's a festival day, else day one. */
   day: DayId;
   /** Minutes since midnight to plan against. */
   atMinute: number;
@@ -32,9 +32,9 @@ export function useFestivalClock(tickMs = 15000): FestivalClock {
   const info = getNow(now);
 
   // Past midnight the calendar date has rolled over, so `day` went null and
-  // this fell back to a *Saturday noon simulation* labelled "Previewing
-  // Saturday" — at exactly the moment you're in a dark car park trying to find
-  // people. Keep last night's day running instead, with its real clock time.
+  // this fell back to a *day-one noon simulation* labelled "Previewing" — at
+  // exactly the moment you're in a dark car park trying to find people. Keep
+  // last night's day running instead, with its real clock time.
   if (!info.day && info.minutes < NIGHT_ENDS_AT) {
     const lastNight = getNow(new Date(now.getTime() - 24 * 60 * 60 * 1000));
     if (lastNight.day) {

@@ -21,7 +21,7 @@ export interface EmergencyInput {
 export function buildEmergencyText(input: EmergencyInput): string {
   const ends = withEffectiveEnds(input.allPerformances, input.turnoverBuffer);
   const lines: string[] = [];
-  lines.push(`WARPED LONG BEACH 2026 — ${input.user.name.toUpperCase()}'S PLAN`);
+  lines.push(`WARPED MONTRÉAL 2026 — ${input.user.name.toUpperCase()}'S PLAN`);
   lines.push(`${EVENT.venue}`);
   lines.push('Unofficial personal companion. Times you entered.');
   lines.push('');

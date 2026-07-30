@@ -1,4 +1,4 @@
-// Device-faithful screenshot harness for the Warped Long Beach Companion.
+// Device-faithful screenshot harness for the Warped MTL Companion.
 // Adapted from the bazaar-brawler "Tavern Bash" harness: serves dist/ locally,
 // drives Chromium via Playwright with iPhone settings (DPR 3, isMobile, hasTouch),
 // walks the app's screens, and writes a contact sheet to shots/index.html.
@@ -15,7 +15,7 @@ import { chromium } from '@playwright/test';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(root, 'dist');
 const OUT = join(root, 'shots');
-const BASE = '/warpedLB/';
+const BASE = '/warpedmtl/';
 
 /**
  * Fictional profiles for the contact sheet. The app ships with an empty roster,
@@ -234,15 +234,29 @@ async function walk(browser, base, vp) {
   const seeded = await page.evaluate(async () => {
     const W = window.__WLB__;
     if (!W) return false;
+    // The public build ships no lineup (Montréal's day split is unpublished),
+    // so the contact sheet brings its own bill — same pattern as verify-e2e.
+    const slug = (n) => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const names = ['Stand-In Parade', 'The Fixtures', 'Rain Delay', 'Load-In', 'Sound Check'];
+    if (!W.state().performances.some((p) => p.type === 'main' && p.day === 'saturday')) {
+      await W.seedLineup(
+        names.map((n) => ({ id: `hx-${slug(n)}`, name: n, searchAliases: [], category: 'main-lineup' })),
+        names.map((n) => ({
+          id: `hx-main-saturday-${slug(n)}`, artistId: `hx-${slug(n)}`, type: 'main', day: 'saturday',
+          stageId: null, startTime: null, endTime: null, estimatedEndTime: null,
+          scheduleStatus: 'time-pending', officialStatus: 'confirmed', sourceRevision: 0, verifiedAt: null,
+        })),
+      );
+    }
     const perfs = W.state().performances;
     const sat = perfs.filter((p) => p.type === 'main' && p.day === 'saturday');
     const byName = (n) => sat.find((p) => W.state().artistById.get(p.artistId)?.name === n);
     const plan = [
-      ['Jimmy Eat World', 'ghost-stage', '15:05', '15:50'],
-      ['The Story So Far', 'rex-stage', '16:10', '16:55'],
-      ['Simple Plan', 'vans-stage', '17:30', '18:20'],
-      ['Underoath', 'beatbox-stage', '15:20', '16:05'],
-      ['Bowling For Soup', 'doordash-stage', '16:30', '17:15'],
+      ['Stand-In Parade', 'ghost-stage', '15:05', '15:50'],
+      ['The Fixtures', 'rex-stage', '16:10', '16:55'],
+      ['Rain Delay', 'vans-stage', '17:30', '18:20'],
+      ['Load-In', 'beatbox-stage', '15:20', '16:05'],
+      ['Sound Check', 'doordash-stage', '16:30', '17:15'],
     ];
     for (const [name, stage, s, e] of plan) {
       const p = byName(name);
@@ -252,13 +266,13 @@ async function walk(browser, base, vp) {
       const p = byName(name);
       if (p) { W.toggleSelection(user, p.id); W.setPriority(user, p.id, pri); }
     };
-    await pick('Jimmy Eat World', 'alex', 'must-see');
-    await pick('The Story So Far', 'alex', 'want-to-see');
-    await pick('Simple Plan', 'alex', 'must-see');
-    await pick('Jimmy Eat World', 'sam', 'must-see');
-    await pick('Underoath', 'sam', 'must-see');
-    await pick('Bowling For Soup', 'jordan', 'want-to-see');
-    await pick('Simple Plan', 'jordan', 'must-see');
+    await pick('Stand-In Parade', 'alex', 'must-see');
+    await pick('The Fixtures', 'alex', 'want-to-see');
+    await pick('Rain Delay', 'alex', 'must-see');
+    await pick('Stand-In Parade', 'sam', 'must-see');
+    await pick('Load-In', 'sam', 'must-see');
+    await pick('Sound Check', 'jordan', 'want-to-see');
+    await pick('Rain Delay', 'jordan', 'must-see');
     // mark friend imports so metadata shows
     const st = W.state();
     await st.updateSettings({
@@ -387,13 +401,13 @@ function contactSheet(all) {
     return `<h2>${vp.name}</h2><div class="grid">${tiles}</div>`;
   }).join('\n');
   const errs = log.filter((l) => l.kind === 'console-error' || l.kind === 'page-error').length;
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Warped LB shots</title><style>
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Warped MTL shots</title><style>
     body{background:#0b2f6b;color:#eaf1fb;font:14px/1.5 system-ui,sans-serif;margin:24px}
     h1{font-size:20px}h2{margin-top:28px;border-bottom:1px solid #2f66c4;padding-bottom:6px}
     .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
     figure{margin:0}img{width:100%;border:1px solid #2f66c4;border-radius:8px;background:#000}
     figcaption{color:#93b4e6;font-size:12px;margin-top:4px;text-align:center}
-  </style></head><body><h1>Warped Long Beach Companion — contact sheet</h1>
+  </style></head><body><h1>Warped MTL Companion — contact sheet</h1>
   <p>${errs} console/page error(s). See shots/console-log.json.</p>${groups}</body></html>`;
 }
 

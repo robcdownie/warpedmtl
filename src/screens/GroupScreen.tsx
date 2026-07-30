@@ -82,7 +82,7 @@ export function GroupScreen({
               day === d ? 'bg-[var(--chip-on)] text-white shadow-sm' : 'text-secondary',
             )}
           >
-            {d === 'saturday' ? 'Saturday' : 'Sunday'}
+            {dayLabel(d)}
           </button>
         ))}
       </div>

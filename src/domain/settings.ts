@@ -13,9 +13,10 @@ export const DEFAULT_SCHEDULE_PROVENANCE: ScheduleProvenance = {
 };
 
 /**
- * The shipped map was traced from the 2025-era Long Beach reference. It stays
- * unverified until a human checks it against the official 2026 map — caching
- * the image proves nothing about whether the layout is right.
+ * The shipped map is a reference layout — not yet drawn or calibrated for
+ * this venue. It stays unverified until a human checks it against the
+ * official 2026 map — caching the image proves nothing about whether the
+ * layout is right.
  */
 export const DEFAULT_MAP_META: MapMeta = {
   mapYear: 2026,

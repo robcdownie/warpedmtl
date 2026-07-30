@@ -108,7 +108,8 @@ clears all of it.
 
 ## 5. Map verification — `settings.map`
 
-The shipped map was traced from an earlier Long Beach reference. `verified` is
+The shipped map is a reference layout, not yet drawn or calibrated for this
+venue. `verified` is
 `false` until a human works through the checklist in **Menu → Map Setup**.
 Caching the image offline is *not* evidence the layout is right, and the map
 screen says so until it's checked.

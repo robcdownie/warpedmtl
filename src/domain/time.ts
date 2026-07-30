@@ -267,3 +267,36 @@ export function dayLabel(day: DayId | null): string {
   if (!day) return 'TBA';
   return EVENT.days.find((d) => d.id === day)?.label ?? day;
 }
+
+// Rendered date strings are derived from EVENT.days so a fork edits
+// config/event.ts and every screen follows. No month or weekday may be
+// hardcoded in JSX: the built-bundle string ban (scripts/verify-e2e.mjs)
+// exists because Long Beach's dates once lived there and survived a fork.
+
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+] as const;
+
+/** "August 21–22, 2026" (same month) / "August 31 – September 1, 2026". */
+export function festivalDateRange(): string {
+  const first = EVENT.days[0];
+  const last = EVENT.days[EVENT.days.length - 1];
+  const [year, m1, d1] = first.date.split('-').map(Number);
+  const [, m2, d2] = last.date.split('-').map(Number);
+  if (m1 === m2) return `${MONTHS[m1 - 1]} ${d1}–${d2}, ${year}`;
+  return `${MONTHS[m1 - 1]} ${d1} – ${MONTHS[m2 - 1]} ${d2}, ${year}`;
+}
+
+/** "Fri Aug 21 & Sat Aug 22" (short) / "Friday August 21 & Saturday August 22, 2026" (long). */
+export function festivalDaysLine(style: 'short' | 'long'): string {
+  const year = EVENT.days[0].date.slice(0, 4);
+  const parts = EVENT.days.map((day) => {
+    const [, mo, d] = day.date.split('-').map(Number);
+    const month = MONTHS[mo - 1];
+    return style === 'short'
+      ? `${day.label.slice(0, 3)} ${month.slice(0, 3)} ${d}`
+      : `${day.label} ${month} ${d}`;
+  });
+  return style === 'short' ? parts.join(' & ') : `${parts.join(' & ')}, ${year}`;
+}

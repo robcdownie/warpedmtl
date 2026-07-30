@@ -1,4 +1,4 @@
-# Warped LB Companion — Docs
+# Warped MTL Companion — Docs
 
 Guides for using, running, and maintaining the app.
 
@@ -14,5 +14,5 @@ Adding people is done in the app itself — **Menu → Friends & Sharing → Add
 seeded roster to edit in code.
 
 Quick links:
-- Live app: https://robcdownie.github.io/warpedLB/
+- Live app: https://robcdownie.github.io/warpedmtl/
 - Source layout & deploy: see the top-level [README](../README.md)

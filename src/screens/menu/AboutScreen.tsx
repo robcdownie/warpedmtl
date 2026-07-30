@@ -1,6 +1,7 @@
 import { Screen, Card } from '@/components/ui';
 import { WarpedWordmark } from '@/components/WarpedWordmark';
-import { APP_NAME, APP_DISCLAIMER, EVENT } from '@/config/event';
+import { APP_NAME, APP_DISCLAIMER, EVENT, BASE_URL } from '@/config/event';
+import { festivalDaysLine } from '@/domain/time';
 
 export function AboutScreen() {
   return (
@@ -22,7 +23,7 @@ export function AboutScreen() {
         <p className="text-[14px] text-primary">{EVENT.name}</p>
         <p className="text-[13px] text-secondary">{EVENT.venue}</p>
         <p className="text-[13px] text-secondary">{EVENT.address}</p>
-        <p className="mt-1 text-[13px] text-secondary">Saturday July 25 &amp; Sunday July 26, 2026</p>
+        <p className="mt-1 text-[13px] text-secondary">{festivalDaysLine('long')}</p>
       </Card>
 
       <Card className="mb-4 border-warp-yellow/40 bg-warp-yellow/5 p-4">
@@ -53,23 +54,23 @@ export function AboutScreen() {
 
       <Card className="mb-4 p-4">
         <h2 className="mb-2 font-display text-[14px] uppercase tracking-wide text-secondary">
-          Corndog fund
+          Poutine fund
         </h2>
         <p className="text-[13px] leading-relaxed text-secondary">
           This app is free and always will be. If it saved your weekend and you feel like it, you can
-          throw a couple bucks at my corndog purchases. Entirely optional — nothing in here is locked
+          throw a couple bucks at my poutine tab. Entirely optional — nothing in here is locked
           behind it.
         </p>
         <a
-          href="https://venmo.com/u/robbie-downie"
+          href={`${BASE_URL}donate.html`}
           target="_blank"
           rel="noreferrer noopener"
           className="mt-3 flex min-h-touch items-center justify-center rounded-lg border border-warp-pink/50 bg-warp-pink/10 px-4 font-display text-[14px] text-primary active:bg-warp-pink/20"
         >
-          Venmo @robbie-downie
+          Chip in
         </a>
         <p className="mt-2 text-center text-[11px] text-muted">
-          Opens Venmo — needs a connection, unlike the rest of the app.
+          Opens the tip jar in your browser — needs a connection, unlike the rest of the app.
         </p>
       </Card>
 

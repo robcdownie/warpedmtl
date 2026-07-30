@@ -2,9 +2,10 @@
 @import '@fontsource/archivo-black/400.css';
 
 /*
-  Warped Long Beach Companion — theme.
-  Palette sampled from the supplied Vans Warped Long Beach artwork:
-  saturated blue, bright yellow, hot pink, black, white, small orange accents.
+  Warped MTL Companion — theme.
+  Palette sampled from the original Warped hero artwork (inherited from the
+  first instance): saturated blue, bright yellow, hot pink, black, white,
+  small orange accents.
 */
 
 @theme {

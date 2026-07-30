@@ -1,10 +1,10 @@
-# Warped LB Companion
+# Warped MTL Companion
 
-An **unofficial, fan-made planning app** for Vans Warped Tour Long Beach 2026 (Sat Jul 25 – Sun Jul 26). It's an installable Progressive Web App that works **fully offline** once installed — built for the reality that festival cell service is terrible.
+An **unofficial, fan-made planning app** for Vans Warped Tour Montréal 2026 (Fri Aug 21 – Sat Aug 22, Espace 67, Parc Jean-Drapeau). It's an installable Progressive Web App that works **fully offline** once installed — built for the reality that festival cell service is terrible, and Parc Jean-Drapeau's is notoriously so.
 
 > **Unofficial fan-made app.** Not affiliated with, endorsed by, or connected to Vans, Vans Warped Tour, or the venue. Set times are entered by you or imported from a code — always check the official board.
 
-**Live app: https://robcdownie.github.io/warpedLB/**
+**Live app: https://robcdownie.github.io/warpedmtl/**
 
 No account. No login. No server. Nothing you do in this app is uploaded anywhere.
 
@@ -12,15 +12,15 @@ No account. No login. No server. Nothing you do in this app is uploaded anywhere
 
 ## What it does
 
-- Pick from all 151 main-lineup artists plus the Warped Unplugged appearances, tagged **Must See / Want to See / Maybe**.
+- Pick your bands from the lineup, tagged **Must See / Want to See / Maybe**. (The lineup is seeded the day the official Friday/Saturday split is published — until then the band list starts empty rather than guessing.)
 - Flag **overlapping sets** and tight walking windows between stages.
 - Compare plans with friends and find **windows where everyone is actually free**.
-- Show where each person *plans* to be through the day, on the real festival map.
+- Show where each person *plans* to be through the day, on the festival map (a reference layout until the real one is drawn).
 - Keep working with no signal — force-close, airplane mode, reopen, and your plan is still there.
 
 ## Where do set times come from?
 
-Warped doesn't publish stage times in advance. They go up on a big board close to showtime. So the app ships with the **lineup but no times**, and there are two ways to fill them in:
+Warped doesn't publish stage times in advance. They go up on a big board close to showtime. So the app ships with **no times**, and there are two ways to fill them in:
 
 1. **Paste a code someone already typed.** If somebody has entered the board and shared a code (check the thread you found this app in), paste it into **Menu → Schedule Import/Export**. Your whole weekend fills in at once. You'll see a preview of exactly what changes before anything is saved, and you can roll it back.
 2. **Type them yourself.** **Schedule → Enter Times → Board** is laid out like the physical poster — one column per stage, times then bands — so it's quick to copy across.
@@ -67,7 +67,7 @@ Vite · React · TypeScript · Tailwind CSS v4 · IndexedDB (`idb`) · Zustand �
 
 ```bash
 npm install
-npm run dev            # http://localhost:5173/warpedLB/
+npm run dev            # http://localhost:5173/warpedmtl/
 ```
 
 Service workers only run in a real build, so offline behaviour must be tested against a build:
@@ -113,6 +113,8 @@ src/
 There is **no seeded roster** — the app starts with zero profiles and you create your own on first run, or import one. Add people in **Menu → Friends & Sharing**.
 
 Read [`docs/trust-states.md`](docs/trust-states.md) before adding a screen. The app enforces six rules in code, not just in copy: unknown ≠ free, partial ≠ complete, planned ≠ live, stale ≠ current, imported ≠ fresh, cached ≠ verified. Empty results are claims too — "no conflicts" on a day with 5 of 76 sets entered is over-confidence, not good news.
+
+There is also **no seeded lineup** right now — Montréal's official day split is unpublished, so `src/data/artists-*.ts` ship empty and the e2e harness brings its own fixture bill (see `scripts/verify-e2e.mjs`). A built-bundle **string ban** in the same script fails the deploy gate if `Sunday` (capital S), `Long Beach`, `July 25`, or `venmo.com` ever reappears in the built output.
 
 ## Known limitations
 

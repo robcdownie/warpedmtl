@@ -75,8 +75,9 @@ export function MapSetupScreen({ onOpenMenu }: { onOpenMenu: (r: MenuRoute) => v
         {!map.verified && (
           <p className="mt-2 flex items-start gap-1.5 text-[12px] leading-relaxed text-warn">
             <TriangleAlert size={13} className="mt-0.5 shrink-0" aria-hidden />
-            The shipped layout was traced from an earlier Long Beach map. The image being cached
-            offline says nothing about whether it matches the 2026 site.
+            The shipped layout is a reference sketch — it has not been drawn or calibrated
+            against this venue yet. The image being cached offline says nothing about whether
+            it matches the real site.
           </p>
         )}
       </Card>

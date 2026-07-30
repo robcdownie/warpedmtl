@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { EVENT } from '@/config/event';
-import { parseBoardTime, shouldAdvanceBoardTime, timeUntilFestival, getNow, windDownStarted } from './time';
+import {
+  parseBoardTime,
+  shouldAdvanceBoardTime,
+  timeUntilFestival,
+  getNow,
+  windDownStarted,
+  festivalDateRange,
+  festivalDaysLine,
+} from './time';
 
 // The board lists start times only, within festival hours (11:00-23:00), so a
 // bare number is unambiguous. These cases are transcribed from the real 2025
@@ -195,5 +203,20 @@ describe('windDownStarted', () => {
   it('stays wound down afterwards', () => {
     expect(at('2026-08-23T09:00:00-04:00')).toBe(true);
     expect(at('2026-12-01T09:00:00-05:00')).toBe(true);
+  });
+});
+
+// Rendered date lines are derived from EVENT.days (string-ban rule: no
+// hardcoded weekday or month in JSX). These pins re-anchor per fork, like the
+// date fixtures above.
+describe('derived date display', () => {
+  it('festivalDateRange follows EVENT.days', () => {
+    expect(festivalDateRange()).toBe('August 21–22, 2026');
+  });
+
+  it('festivalDaysLine renders labels, not day ids', () => {
+    // Ids are storage tokens ('saturday' = Friday here); labels must win.
+    expect(festivalDaysLine('short')).toBe('Fri Aug 21 & Sat Aug 22');
+    expect(festivalDaysLine('long')).toBe('Friday August 21 & Saturday August 22, 2026');
   });
 });
