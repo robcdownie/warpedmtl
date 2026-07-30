@@ -550,6 +550,14 @@ function PlanStep({
   onImportTimes: () => void;
   onSkip: () => void;
 }) {
+  /**
+   * Until Montréal publishes the day split there are no bands, so making "Pick
+   * My Bands" the loud primary walks a brand-new user straight into an empty
+   * screen on their first tap. While that is true, keep the card — it is where
+   * the job lives — but stop selling it, and let the honest exit be the primary
+   * instead. Self-corrects the day the lineup seeds; no follow-up needed.
+   */
+  const noLineup = useApp((s) => s.artists).length === 0;
   return (
     <>
       <Heading headingRef={headingRef}>Build your festival plan</Heading>
@@ -561,15 +569,25 @@ function PlanStep({
         <button
           type="button"
           onClick={onPickBands}
-          className="flex w-full items-start gap-3 rounded-2xl border-2 border-warp-pink bg-warp-pink/5 p-4 text-left"
+          className={cx(
+            'flex w-full items-start gap-3 rounded-2xl border-2 p-4 text-left',
+            noLineup ? 'border-subtle bg-[var(--surface-card)]' : 'border-warp-pink bg-warp-pink/5',
+          )}
         >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-warp-pink text-white">
+          <span
+            className={cx(
+              'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+              noLineup ? 'bg-accent-soft text-accent' : 'bg-warp-pink text-white',
+            )}
+          >
             <ListChecks size={22} aria-hidden />
           </span>
           <span className="flex-1">
             <span className="block font-display text-[17px] text-primary">Pick My Bands</span>
             <span className="block text-[13px] leading-snug text-secondary">
-              Choose your Must See, Want to See, and Maybe bands.
+              {noLineup
+                ? 'The lineup drops closer to the show. Your picks land here the moment it does.'
+                : 'Choose your Must See, Want to See, and Maybe bands.'}
             </span>
           </span>
         </button>
@@ -600,7 +618,11 @@ function PlanStep({
       <PhaseModel className="mt-5" />
 
       <div className="flex-1" />
-      <Button variant="ghost" className="mt-8 w-full py-3 text-[15px]" onClick={onSkip}>
+      <Button
+        variant={noLineup ? 'yellow' : 'ghost'}
+        className="mt-8 w-full py-3 text-[15px]"
+        onClick={onSkip}
+      >
         I&apos;ll do this later — take me in
       </Button>
     </>
