@@ -22,8 +22,16 @@ import { chromium, webkit, devices } from '@playwright/test';
  */
 const HARNESS_NOW = new Date('2026-08-21T14:00:00-04:00'); // mid-festival, day one, EDT
 
-async function pinClock(page) {
-  await page.clock.install({ time: HARNESS_NOW });
+/**
+ * The pre-festival smoke pass pins here instead: launch week, nine days out.
+ * Every state a launch-post visitor lands in — the countdown, the empty
+ * Bands screen, Schedule opening on My Day — only exists at a clock the
+ * mid-festival pin can never produce.
+ */
+const PRE_FESTIVAL_NOW = new Date('2026-08-12T12:00:00-04:00');
+
+async function pinClock(page, time = HARNESS_NOW) {
+  await page.clock.install({ time });
   await page.clock.resume();
 }
 
@@ -1062,6 +1070,97 @@ async function renderPass(base, cfg) {
 }
 
 /**
+ * Pre-festival smoke pass. Every other browser pass pins the clock to
+ * mid-festival, which is right for festival-day behaviour but left the
+ * ship-state fixes — empty-Bands copy, Schedule's first-run view, Now's
+ * pre-schedule cards — pinned by nothing a launch-week visitor would see.
+ * Deliberately small and deterministic: the full phase-staged render matrix
+ * is Orlando work; this is the regression tripwire that keeps the launch
+ * window and the freeze-period data-only deploys honest.
+ */
+async function preFestivalPass(base) {
+  prefix = 'pre-festival';
+  const browser = await chromium.launch();
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await pinClock(page, PRE_FESTIVAL_NOW);
+  await page.goto(base, { waitUntil: 'networkidle' });
+
+  const welcome = await page
+    .waitForSelector('text=Plan Warped Tour without depending on cell service', { timeout: 15000 })
+    .then(() => true)
+    .catch(() => false);
+  check('welcome flow renders at a pre-festival clock', welcome);
+
+  await skipOnboarding(page);
+
+  // Now: the countdown, not the festival dashboard — and none of the
+  // zero-data cards that only earn their place once data exists.
+  await page.click('nav[aria-label="Primary"] button[aria-label="Now"]').catch(() => {});
+  await page.waitForTimeout(350);
+  const now = await page.evaluate(() => document.body.innerText);
+  // Case-insensitive throughout: several headings render through a CSS
+  // uppercase transform, which innerText reflects — a case-sensitive negative
+  // check would pass vacuously against "YOUR PLAN OVERVIEW".
+  check(
+    'Now shows the countdown, not festival day',
+    /countdown/i.test(now) && !/happening now!/i.test(now) && /no plan yet/i.test(now),
+  );
+  check(
+    'Now hides the zero-data cards',
+    !/your plan overview/i.test(now) && !/set times not loaded/i.test(now),
+  );
+  check(
+    'Now carries one disclaimer paragraph plus the About pointer',
+    /not affiliated with/i.test(now) && /full disclaimer in About\./i.test(now) && !/has no GPS/i.test(now),
+  );
+
+  // Bands: the honest empty state, not filter-blaming copy or chips that
+  // would filter nothing.
+  await page.click('nav[aria-label="Primary"] button[aria-label="Bands"]').catch(() => {});
+  await page.waitForTimeout(350);
+  const bands = await page.evaluate(() => ({
+    text: document.body.innerText,
+    pressedChips: document.querySelector('main')?.querySelectorAll('[aria-pressed]').length ?? -1,
+  }));
+  check(
+    'empty Bands says the lineup lands here, blames no filters',
+    /the lineup lands here/i.test(bands.text) && !/no artists match these filters/i.test(bands.text),
+    `pressedChips=${bands.pressedChips}`,
+  );
+  check('empty Bands renders no filter chips', bands.pressedChips === 0);
+
+  // Schedule: first run lands on My Day's empty state with both real next
+  // moves — never the board editor weeks before a board exists.
+  await page.click('nav[aria-label="Primary"] button[aria-label="Schedule"]').catch(() => {});
+  await page.waitForTimeout(350);
+  const schedule = await page.evaluate(() => ({
+    text: document.body.innerText,
+    boardInput: !!document.querySelector('main input[inputmode="numeric"]'),
+  }));
+  check(
+    'Schedule opens on My Day, not the board editor',
+    /no set times yet/i.test(schedule.text) && /paste a code/i.test(schedule.text) && !schedule.boardInput,
+  );
+
+  // The remaining tabs still navigate and paint at this clock.
+  for (const tab of ['Group', 'Map']) {
+    await page.click(`nav[aria-label="Primary"] button[aria-label="${tab}"]`).catch(() => {});
+    await page.waitForTimeout(350);
+  }
+  const fits = await page.evaluate(
+    () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+  );
+  check('Group and Map navigate and fit at a pre-festival clock', fits);
+
+  check('no uncaught page errors at a pre-festival clock', errors.length === 0, errors[0] ?? '');
+  await browser.close();
+  prefix = '';
+}
+
+/**
  * Built-bundle string ban. Montréal runs Friday/Saturday, donations moved off
  * Venmo, and the Long Beach identity must not survive a rebuild — so the
  * BUILT output (not the source) is scanned for four strings that would each
@@ -1153,6 +1252,7 @@ async function main() {
   try {
     await stringBanPass();
     await functionalPass(base);
+    await preFestivalPass(base);
     for (const cfg of RENDER_MATRIX) await renderPass(base, cfg);
   } finally {
     srv.close();
