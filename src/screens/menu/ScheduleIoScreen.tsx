@@ -69,7 +69,12 @@ export function ScheduleIoScreen() {
               paste, or load the file. You&apos;ll see exactly what changes before anything is saved.
             </p>
           </Card>
-          <ImportPanel accept={['schedule']} />
+          {/* Paste-first here, unlike friend-to-friend sharing: this screen
+              renders the panel the moment you arrive, and set-time codes are
+              distributed as text you copy, not a QR to point a phone at. Opening
+              on Scan meant a camera prompt with nothing to scan. Scan is still
+              one labelled tap away. */}
+          <ImportPanel accept={['schedule']} defaultMethod="paste" />
         </>
       ) : (
         <>

@@ -18,10 +18,18 @@ type Method = 'scan' | 'paste' | 'file';
  */
 export function ImportPanel({
   accept,
+  defaultMethod,
   onDone,
 }: {
   /** Restrict which payload types are accepted (e.g. ['selections']). */
   accept?: PayloadType[];
+  /**
+   * Which acquisition method opens first. Defaults to scanning, which is right
+   * for two phones in a field. Override where the panel mounts on arrival
+   * rather than behind a deliberate tap — mounting the scanner fires an OS
+   * camera prompt, and a denial is sticky per-origin.
+   */
+  defaultMethod?: Method;
   onDone?: () => void;
 }) {
   const users = useApp((s) => s.users);
@@ -34,7 +42,7 @@ export function ImportPanel({
   // Scanning is what actually happens between two phones in a field; the
   // paste box was the default, so both people landed staring at an empty
   // textarea with no QR anywhere on screen.
-  const [method, setMethod] = useState<Method>('scan');
+  const [method, setMethod] = useState<Method>(defaultMethod ?? 'scan');
   const [pasteText, setPasteText] = useState('');
   const [env, setEnv] = useState<Envelope | null>(null);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
