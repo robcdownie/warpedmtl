@@ -636,6 +636,118 @@ async function functionalPass(base) {
   // prod still has our 2 e2e-set performances but demo didn't add to prod
   check('demo data separate from production', demoSep.prodStillClean <= 2, `prodScheduled=${demoSep.prodStillClean}`);
 
+  // 7b. MAP "NOW / NEXT" (F1 — asked for at Long Beach). Each stage pin must
+  // answer "who is on here, and who is next" at the scrubbed slider minute,
+  // in the honest register: an est-class end softens to "likely done" once
+  // it passes, an exact end just ends, and a stage with no timed sets claims
+  // nothing. Step 2 put one set on stage-1 (15:00–15:40, exact end) and one
+  // on stage-2 (15:20–16:00, exact) — WHICH bands those are depends on the
+  // store's load order, so resolve their names from the store instead of
+  // assuming the bill's order. Then time one still-untimed set OPEN-ended —
+  // stage-3 at 15:00, no end entered — so the assumed-end path runs on
+  // screen, not just in unit tests. This section sits after the
+  // demo-separation check on purpose: that check counts timed sets and
+  // prices in exactly two.
+  const mapBill = await page.evaluate(async () => {
+    const W = window.__WLB__;
+    const st = W.state();
+    const name = (p) => st.artistById.get(p.artistId)?.name ?? p.artistId;
+    const onStage1 = st.performances.find((p) => p.stageId === 'stage-1' && p.startTime);
+    const onStage2 = st.performances.find((p) => p.stageId === 'stage-2' && p.startTime);
+    const spare = st.performances.find(
+      (p) => p.type === 'main' && p.day === 'saturday' && !p.startTime && !p.stageId,
+    );
+    await W.updatePerformance({
+      ...spare,
+      stageId: 'stage-3',
+      startTime: '15:00',
+      endTime: null,
+      estimatedEndTime: null,
+      scheduleStatus: 'scheduled',
+    });
+    return {
+      nowAct: name(onStage1), // on stage-1, 15:00–15:40 exact
+      laterAct: name(onStage2), // on stage-2, 15:20–16:00 exact
+      openAct: name(spare), // on stage-3, 15:00, end unknown → assumed 15:30
+      spareId: spare.id,
+    };
+  });
+  await page.click('nav[aria-label="Primary"] button[aria-label="Map"]');
+  await page.waitForTimeout(500);
+
+  // Drive the time slider the way a thumb does — through the input event —
+  // so followNow disengages and the pins re-answer for the scrubbed minute.
+  const scrubTo = async (minutes) => {
+    await page.evaluate((m) => {
+      const el = document.querySelector('input[type="range"][aria-label="Time of day"]');
+      const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+      set.call(el, String(m));
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    }, minutes);
+    await page.waitForTimeout(350);
+  };
+  /** aria-label per numbered stage pin — the pin speaks its now/next out loud. */
+  const stagePins = () =>
+    page.evaluate(() => {
+      const out = {};
+      for (const el of document.querySelectorAll('[role="button"][aria-label]')) {
+        const label = el.getAttribute('aria-label');
+        if (/^Stage \d/.test(label)) out[label.split(' — ')[0]] = label;
+      }
+      return out;
+    });
+
+  await scrubTo(15 * 60 + 5); // 3:05 PM — mid set on stages 1 and 3, before stage-2's
+  let pins = await stagePins();
+  check(
+    'map: mid-set, "now" renders on the RIGHT stage (F1)',
+    (pins['Stage 1'] ?? '').includes(`now: ${mapBill.nowAct}`),
+    pins['Stage 1'] ?? 'no Stage 1 pin',
+  );
+  check(
+    'map: an idle stage answers with its next act and start time',
+    (pins['Stage 2'] ?? '').includes(`next: ${mapBill.laterAct} at 3:20 PM`),
+    pins['Stage 2'] ?? 'no Stage 2 pin',
+  );
+  // The pin chip is a flex row of spans (shrink-0 prefix, truncating name)
+  // joined by a non-breaking space, and innerText renders flex items with
+  // separators - collapse ALL whitespace before matching (\s covers U+00A0).
+  const nowLineVisible = await page.evaluate(
+    (act) => document.body.innerText.replace(/\s+/g, ' ').includes(`Now: ${act}`),
+    mapBill.nowAct,
+  );
+  check('map: the Now line is visibly rendered, not aria-only', nowLineVisible);
+  check(
+    'map: a stage with no timed sets claims nothing — unknown is not a quiet stage',
+    pins['Stage 4'] === 'Stage 4',
+    pins['Stage 4'] ?? 'no Stage 4 pin',
+  );
+
+  await scrubTo(15 * 60 + 45); // 3:45 PM — past the ends on stages 1 and 3
+  pins = await stagePins();
+  check(
+    'map: past an ASSUMED end the register softens to "likely done"',
+    (pins['Stage 3'] ?? '').includes(`${mapBill.openAct} likely done`),
+    pins['Stage 3'] ?? 'no Stage 3 pin',
+  );
+  check(
+    'map: past an EXACT end there is no lingering claim',
+    pins['Stage 1'] === 'Stage 1',
+    pins['Stage 1'] ?? 'no Stage 1 pin',
+  );
+  check(
+    'map: the later set takes over as "now" on its own stage',
+    (pins['Stage 2'] ?? '').includes(`now: ${mapBill.laterAct}`),
+    pins['Stage 2'] ?? 'no Stage 2 pin',
+  );
+  // Put the extra set back to untimed so every later step sees the same
+  // two-set schedule the rest of the pass was written against.
+  await page.evaluate(async (spareId) => {
+    const W = window.__WLB__;
+    const spare = W.state().performances.find((p) => p.id === spareId);
+    await W.updatePerformance({ ...spare, stageId: null, startTime: null, scheduleStatus: 'time-pending' });
+  }, mapBill.spareId);
+
   // 8. Error handling: invalid + wrong-version codes.
   const errs = await page.evaluate(() => {
     const W = window.__WLB__;

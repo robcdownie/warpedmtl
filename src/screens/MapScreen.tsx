@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { MapPin, Crosshair, X, Check, Clock, Sparkles, Filter, Footprints, TriangleAlert, Trash2 } from 'lucide-react';
 import { Button, cx } from '@/components/ui';
 import { MapCanvas, type MapCanvasHandle } from './map/MapCanvas';
-import { LocationPin, FriendPin, FriendClusterPin } from './map/MapPins';
+import { LocationPin, FriendPin, FriendClusterPin, type StagePinStatus } from './map/MapPins';
 import { EssentialsStrip, nearestMatch, type Essential } from './map/EssentialsStrip';
 import { FriendAvatar } from '@/components/FriendAvatar';
 import { FirstUseTip } from '@/components/FirstUseTip';
@@ -14,8 +14,9 @@ import { positionWithCheckin, positionBadge, type PlannedPosition } from '@/doma
 import { locationVisible, stagesWithSelections } from './map/visibility';
 import { FILTER_LABELS, type FilterKey } from './map/markerMeta';
 import { travelMinutes, overrideMap, MAP_ASPECT } from '@/domain/travel';
-import { formatMinutes, hhmmToMinutes, formatRelative, formatDuration } from '@/domain/time';
+import { formatMinutes, formatTime, hhmmToMinutes, formatRelative, formatDuration, dayLabel } from '@/domain/time';
 import { withEffectiveEnds } from '@/domain/endTimes';
+import { stageNowNext } from '@/domain/stageNow';
 import { EVENT } from '@/config/event';
 import type { MenuRoute } from '@/components/MenuDrawer';
 import type { DayId, MapLocation, User } from '@/domain/types';
@@ -42,6 +43,7 @@ export function MapScreen({ onOpenMenu }: { onOpenMenu: (r: MenuRoute) => void }
   const checkins = useApp((s) => s.checkins);
   const selections = useApp((s) => s.selections);
   const performanceById = useApp((s) => s.performanceById);
+  const artistById = useApp((s) => s.artistById);
   const activeUserId = useApp((s) => s.settings.activeUserId);
   const staleMinutes = useApp((s) => s.settings.staleMinutes);
   const mapMeta = useApp((s) => s.settings.map);
@@ -86,6 +88,38 @@ export function MapScreen({ onOpenMenu }: { onOpenMenu: (r: MenuRoute) => void }
     () => stagesWithSelections(selections, performanceById),
     [selections, performanceById],
   );
+
+  // Who is on / who is next, per stage, at the chosen minute — the pins answer
+  // without a tap-through (F1, asked for at Long Beach). Follows the scrubbed
+  // slider because it reads `atMinute`, and follows the day toggle. Stages
+  // with no timed sets get NO entry: the bare pin they show today already says
+  // the honest thing (unknown is not a quiet stage), which also keeps the
+  // ship-state map — lineup not seeded yet — pixel-identical.
+  const stageLive = useMemo(() => {
+    const m = new Map<string, StagePinStatus>();
+    for (const loc of locations) {
+      if (loc.category !== 'stage') continue;
+      const s = stageNowNext(loc.id, day, atMinute, ctx.allPerformances, ctx.turnoverBuffer);
+      if (!s.now && !s.next) continue;
+      m.set(loc.id, {
+        now: s.now
+          ? {
+              name: artistById.get(s.now.perf.artistId)?.name ?? 'Artist',
+              likelyDone: s.now.state === 'likely-done',
+              endLabel: s.now.end.hhmm ? formatTime(s.now.end.hhmm) : null,
+              endEst: s.now.end.kind !== 'exact',
+            }
+          : null,
+        next: s.next
+          ? {
+              name: artistById.get(s.next.perf.artistId)?.name ?? 'Artist',
+              timeLabel: formatTime(s.next.perf.startTime),
+            }
+          : null,
+      });
+    }
+    return m;
+  }, [locations, day, atMinute, ctx.allPerformances, ctx.turnoverBuffer, artistById]);
 
   const locFilters = useMemo(() => new Set([...active].filter((k) => k !== 'friends')), [active]);
   const showFriends = active.has('friends') || matterNow;
@@ -303,6 +337,7 @@ export function MapScreen({ onOpenMenu }: { onOpenMenu: (r: MenuRoute) => void }
               loc={loc}
               labeled={loc.category === 'stage'}
               labelBelow={stageLabelBelow.has(loc.id)}
+              status={stageLive.get(loc.id)}
               highlighted={
                 (loc.category === 'stage' && selectedStages.has(loc.id) && (active.has('selected') || matterNow)) ||
                 selected?.id === loc.id
@@ -380,6 +415,7 @@ export function MapScreen({ onOpenMenu }: { onOpenMenu: (r: MenuRoute) => void }
             loc={selected}
             people={friendPositions.filter((f) => f.loc?.id === selected.id)}
             missing={plans.missing}
+            status={stageLive.get(selected.id)}
             walkMinutes={walkToSelected}
             activeUserId={activeUserId}
             onClose={() => setSelected(null)}
@@ -395,14 +431,17 @@ export function MapScreen({ onOpenMenu }: { onOpenMenu: (r: MenuRoute) => void }
       <div className="shrink-0 border-t border-subtle bg-[var(--surface-card)] px-3 pb-[calc(var(--nav-h)+0.5rem)] pt-2">
         <div className="mb-1.5 flex items-center gap-2">
           <div className="flex rounded-lg bg-[var(--surface-sunken)] p-0.5">
-            {(['saturday', 'sunday'] as DayId[]).map((d) => (
+            {/* Labels come from EVENT.days via dayLabel() — day ids are legacy
+                storage tokens, not weekdays. This toggle shipped hardcoded
+                ('Sat'/'Sun') because the S2 sweep grepped for the full words. */}
+            {EVENT.days.map((d) => (
               <button
-                key={d}
+                key={d.id}
                 type="button"
-                onClick={() => { setDay(d); setFollowNow(false); }}
-                className={cx('rounded px-2 py-1 text-[12px] font-bold', day === d ? 'bg-[var(--chip-on)] text-white' : 'text-secondary')}
+                onClick={() => { setDay(d.id); setFollowNow(false); }}
+                className={cx('rounded px-2 py-1 text-[12px] font-bold', day === d.id ? 'bg-[var(--chip-on)] text-white' : 'text-secondary')}
               >
-                {d === 'saturday' ? 'Sat' : 'Sun'}
+                {dayLabel(d.id).slice(0, 3)}
               </button>
             ))}
           </div>
@@ -476,6 +515,7 @@ function LocationCard({
   loc,
   people,
   missing,
+  status,
   walkMinutes,
   activeUserId,
   onClose,
@@ -485,6 +525,8 @@ function LocationCard({
   loc: MapLocation;
   people: FriendPosition[];
   missing: User[];
+  /** Stage now/next, when this pin is a stage with timed sets. */
+  status?: StagePinStatus;
   walkMinutes: number | null;
   activeUserId: string;
   onClose: () => void;
@@ -511,6 +553,41 @@ function LocationCard({
           <X size={18} aria-hidden />
         </button>
       </div>
+
+      {/* This stage's own clock. An estimated or assumed finish keeps the
+          schedule's est. affordance, and a set past a guessed end is only
+          "likely done" — the register never hardens past the data. */}
+      {status?.now && (
+        <p className="mt-2 text-[13px] text-primary">
+          {status.now.likelyDone ? (
+            <>
+              <b>{status.now.name}</b> — likely done
+              {status.now.endLabel && (
+                <span className="text-muted">
+                  {' '}
+                  (est. end {status.now.endLabel})
+                </span>
+              )}
+            </>
+          ) : (
+            <>
+              Now: <b>{status.now.name}</b>
+              {status.now.endLabel && (
+                <span className="text-muted">
+                  {' '}
+                  — until {status.now.endLabel}
+                  {status.now.endEst && <span className="text-[10px]"> est.</span>}
+                </span>
+              )}
+            </>
+          )}
+        </p>
+      )}
+      {status?.next && (
+        <p className={cx('text-[13px] text-secondary', status.now ? 'mt-0.5' : 'mt-2')}>
+          Next: <b className="text-primary">{status.next.name}</b> · {status.next.timeLabel}
+        </p>
+      )}
 
       {/* One row per person, each stating its OWN source. Lumping everyone
           under "Planned here" hid the difference between a live check-in and

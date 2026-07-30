@@ -1,8 +1,21 @@
 import type { MapLocation, User } from '@/domain/types';
 import { MapMarker } from './MapCanvas';
 import { FriendAvatar } from '@/components/FriendAvatar';
+import { cx } from '@/components/ui';
 import { CATEGORY_STYLE, amenityColor } from './markerMeta';
 import { positionA11yLabel, type PlannedPosition } from '@/domain/positions';
+
+/**
+ * Display-ready now/next for a stage pin (F1 — asked for at Long Beach). Built
+ * by MapScreen from domain/stageNow.ts; only stages with timed data get one,
+ * so the empty-lineup map renders exactly as before. `likelyDone` switches the
+ * register from a hard "Now" claim to the softened one, and `endEst` marks an
+ * estimated/assumed finish so the detail card can carry the est. affordance.
+ */
+export interface StagePinStatus {
+  now: { name: string; likelyDone: boolean; endLabel: string | null; endEst: boolean } | null;
+  next: { name: string; timeLabel: string } | null;
+}
 
 /** Stage/location pin: colored teardrop with an optional short label. */
 export function LocationPin({
@@ -10,6 +23,7 @@ export function LocationPin({
   labeled,
   labelBelow,
   highlighted,
+  status,
   onClick,
 }: {
   loc: MapLocation;
@@ -18,24 +32,69 @@ export function LocationPin({
       don't merge into false compound names ("BeatBox Ghost"). */
   labelBelow?: boolean;
   highlighted?: boolean;
+  /** Who is on / who is next, when this pin is a stage with timed sets. */
+  status?: StagePinStatus;
   onClick?: () => void;
 }) {
   const color = loc.category === 'amenity' ? amenityColor(loc.amenityType) : CATEGORY_STYLE[loc.category].color;
   const isStage = loc.category === 'stage';
   const label = labeled && isStage && (
-    <span
-      className="max-w-[72px] truncate whitespace-nowrap rounded px-1 py-px text-[9px] font-bold text-white shadow"
-      style={{ background: color }}
-    >
-      {loc.shortName ?? loc.name}
+    // The name chip plus at most two whisper-height lines — never a panel.
+    // Chips are solid fills with white/ink text (the sunlight rule: state is
+    // never carried by a translucent wash over map artwork). Prefixes and
+    // times are shrink-0 so truncation eats the band name, not the claim —
+    // "…· likely done" losing its qualifier would turn a hedge into a lie.
+    <span className="flex flex-col items-center gap-px">
+      <span
+        className="max-w-[72px] truncate whitespace-nowrap rounded px-1 py-px text-[9px] font-bold text-white shadow"
+        style={{ background: color }}
+      >
+        {loc.shortName ?? loc.name}
+      </span>
+      {status?.now && (
+        <span
+          className={cx(
+            'flex max-w-[92px] whitespace-nowrap rounded px-1 py-px text-[9px] font-bold shadow',
+            status.now.likelyDone ? 'bg-[#475569] text-white' : 'bg-warp-pink text-white',
+          )}
+        >
+          {status.now.likelyDone ? (
+            <>
+              <span className="min-w-0 truncate">{status.now.name}</span>
+              <span className="shrink-0">&nbsp;· likely done</span>
+            </>
+          ) : (
+            <>
+              <span className="shrink-0">Now:&nbsp;</span>
+              <span className="min-w-0 truncate">{status.now.name}</span>
+            </>
+          )}
+        </span>
+      )}
+      {status?.next && (
+        <span className="flex max-w-[92px] whitespace-nowrap rounded bg-white/95 px-1 py-px text-[9px] font-bold text-warp-ink shadow">
+          <span className="shrink-0">Next:&nbsp;</span>
+          <span className="min-w-0 truncate">{status.next.name}</span>
+          <span className="shrink-0">&nbsp;· {status.next.timeLabel}</span>
+        </span>
+      )}
     </span>
   );
+  // The pin answers out loud too — a screen reader gets the same now/next the
+  // sighted eye does, with the same softened register.
+  const ariaLabel = [
+    `${loc.name}${loc.amenityType ? ` (${loc.amenityType})` : ''}`,
+    ...(status?.now
+      ? [status.now.likelyDone ? `${status.now.name} likely done` : `now: ${status.now.name}`]
+      : []),
+    ...(status?.next ? [`next: ${status.next.name} at ${status.next.timeLabel}`] : []),
+  ].join(' — ');
   return (
     <MapMarker
       xPercent={loc.xPercent}
       yPercent={loc.yPercent}
       onClick={onClick}
-      ariaLabel={`${loc.name}${loc.amenityType ? ` (${loc.amenityType})` : ''}`}
+      ariaLabel={ariaLabel}
       z={isStage ? 3 : 2}
     >
       <div className="flex flex-col items-center gap-0.5">

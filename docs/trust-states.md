@@ -5,7 +5,7 @@ underlying data really was.** A partial schedule read as complete, friends with
 no imported plan read as free, and stale check-ins kept overriding current
 planned positions. Any one of those could put the crew at the wrong stage.
 
-Six distinctions are now enforced everywhere. If you're adding a screen, this
+Seven distinctions are now enforced everywhere. If you're adding a screen, this
 is the vocabulary to use.
 
 | Never say | Say instead | Enforced by |
@@ -16,6 +16,7 @@ is the vocabulary to use.
 | Stale is current | Stale (history only) | `positions.ts` |
 | Imported is fresh | Imported *N hours ago* | `planStatus.ts` |
 | Cached is verified | Reference layout | `settings.map` |
+| Past an est. end is over | Likely done | `stageNow.ts` |
 
 ---
 
@@ -153,3 +154,21 @@ location categories, unusable ids, oversized avatars, and implausible record
 counts. Unknown *performance* ids are a warning (those rows are skipped).
 
 Nothing is partially imported and nothing is silently coerced.
+
+---
+
+## 8. Stage now/next — `src/domain/stageNow.ts`
+
+Map stage pins answer "who is on here, and who is next" at the time slider's
+minute, without a tap-through (F1 — asked for at Long Beach).
+
+- Inside a set's effective end the set is **on**. If that end is estimated or
+  assumed, the end renders with the schedule's `est.` affordance wherever it
+  is shown — the claim is fair, the finish time is the guess.
+- Past an est-class end the register is **likely done** — never a hard claim —
+  and it decays after one further typical set length, when the guess stops
+  meaning anything.
+- Past an **exact** end there is nothing to hedge: the claim just ends.
+- A stage with **no timed sets** shows nothing new. Unknown is not a free
+  stage, and not a quiet one.
+- Cancelled/removed lineup rows are never claimed, as now or as next.
