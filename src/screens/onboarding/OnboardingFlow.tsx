@@ -504,8 +504,11 @@ function OfflineStep({
             Everything is cached in this browser. To actually have it at the festival you still need
             to add it to your Home Screen — close this tab and you may not find your way back.
           </p>
+          {/* Compact: the callout's own two sentences directly above already
+              make the card's framing argument, which the reader also met on
+              the welcome step about a minute ago. The steps are the value here. */}
           <div className="mt-2.5">
-            <InstallFirstCard />
+            <InstallFirstCard compact />
           </div>
         </div>
       )}

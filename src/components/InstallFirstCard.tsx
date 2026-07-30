@@ -17,8 +17,15 @@ import { useInstallState } from '@/hooks/useInstallState';
  * reach anything.
  *
  * Renders nothing once the app is running installed.
+ *
+ * `compact` drops the framing prose and keeps the steps, for the second place
+ * this card appears in one sitting — the offline step's callout already makes
+ * the identical argument in its own two sentences. The <h2> stays in both
+ * variants: it is what the e2e gate reads to confirm the app tells you to
+ * install, and it must never be hidden behind a closed <details> (Chrome
+ * excludes that from innerText).
  */
-export function InstallFirstCard() {
+export function InstallFirstCard({ compact = false }: { compact?: boolean } = {}) {
   const { installed, platform } = useInstallState();
 
   if (installed) {
@@ -35,10 +42,12 @@ export function InstallFirstCard() {
   return (
     <Card className="mb-4 border-warp-yellow/60 bg-warp-yellow/10 p-4">
       <h2 className="font-display text-[16px] text-primary">Add this to your Home Screen first</h2>
-      <p className="mt-1.5 text-[13px] leading-relaxed text-secondary">
-        Do this before you set anything up. It&apos;s what makes the app work with no signal, and it
-        keeps your plan from being stranded in a browser tab.
-      </p>
+      {!compact && (
+        <p className="mt-1.5 text-[13px] leading-relaxed text-secondary">
+          Do this before you set anything up. It&apos;s what makes the app work with no signal, and
+          it keeps your plan from being stranded in a browser tab.
+        </p>
+      )}
 
       {platform === 'ios' && (
         <ol className="mt-3 space-y-1.5 text-[13px] leading-relaxed text-primary">
@@ -76,10 +85,12 @@ export function InstallFirstCard() {
         </p>
       )}
 
-      <p className="mt-3 text-[12px] leading-relaxed text-muted">
-        You can carry on here without installing. It just won&apos;t be on your phone when the
-        signal goes.
-      </p>
+      {!compact && (
+        <p className="mt-3 text-[12px] leading-relaxed text-muted">
+          You can carry on here without installing. It just won&apos;t be on your phone when the
+          signal goes.
+        </p>
+      )}
     </Card>
   );
 }
