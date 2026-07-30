@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Search, X, MapPin, Clock, Check, Music, Unplug, Filter, Star } from 'lucide-react';
+import { Search, X, MapPin, Clock, Check, Music, Unplug, Filter, Star, CalendarDays } from 'lucide-react';
 import { Screen, cx } from '@/components/ui';
+import { EmptyState } from '@/components/EmptyState';
+import { ART } from '@/config/event';
 import { plural } from '@/domain/plural';
 import { FriendAvatar } from '@/components/FriendAvatar';
 import { PriorityBadge } from '@/components/PriorityControl';
@@ -186,7 +188,11 @@ export function BandsScreen() {
           )}
         </div>
 
-        {/* Filter chips */}
+        {/* Filter chips. Hidden until there is a lineup: nine chips that filter
+            nothing are pure chrome on a screen with zero cards. The row lives
+            inside the ResizeObserver-measured header, so dropping it re-measures
+            the sticky offsets automatically. */}
+        {artists.length > 0 && (
         <div className="no-scrollbar scroll-fade-r -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
           {(['saturday', 'sunday'] as DayId[]).map((d) => (
             <Chip key={d} active={day === d} onClick={() => setDay(day === d ? null : d)}>
@@ -226,11 +232,17 @@ export function BandsScreen() {
             </>
           )}
         </div>
+        )}
       </div>
 
-      <FirstUseTip id="bands" className="mt-3">
-        Tap the star to add a band. Tap the card to set Must See, Want to See, or Maybe.
-      </FirstUseTip>
+      {/* A tip appears the first time a feature is actually relevant
+          (FirstUseTip). "Tap the star" teaches nothing while there are no
+          cards to tap — and it would burn its one showing doing it. */}
+      {artists.length > 0 && (
+        <FirstUseTip id="bands" className="mt-3">
+          Tap the star to add a band. Tap the card to set Must See, Want to See, or Maybe.
+        </FirstUseTip>
+      )}
 
       {/* Result count. One shared line replaces 183 identical per-card
           "Stage & time pending" rows while no set times exist. */}
@@ -244,17 +256,29 @@ export function BandsScreen() {
           pushes the A-Z rail off-screen entirely. */}
       <div className="flex gap-1" style={{ '--bands-header-h': `${headerH}px` } as React.CSSProperties}>
         <div ref={listRef} className="min-w-0 flex-1 space-y-4">
-          {sections.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-subtle px-6 py-10 text-center">
-              <Filter size={30} className="mx-auto mb-2 text-accent" aria-hidden />
-              <p className="text-[14px] text-secondary">No artists match these filters.</p>
-              {anyFilter && (
-                <button type="button" onClick={clearAll} className="mt-2 min-h-touch text-[13px] font-semibold text-accent">
-                  Clear filters
-                </button>
-              )}
-            </div>
-          )}
+          {/* Two different nothings. "No artists match these filters" is a lie
+              on a fresh install — there is no lineup to filter, and blaming
+              filters nobody touched sends the user hunting for a control that
+              would not help. Only say it when there really are artists. */}
+          {sections.length === 0 &&
+            (artists.length === 0 && !anyFilter ? (
+              <EmptyState
+                Icon={CalendarDays}
+                image={ART.emptyBands}
+                title="The lineup lands here"
+                message="Montréal hasn't posted the day-by-day split yet. Bands appear here on their own the moment it does — nothing for you to do until then."
+              />
+            ) : (
+              <div className="rounded-2xl border border-dashed border-subtle px-6 py-10 text-center">
+                <Filter size={30} className="mx-auto mb-2 text-accent" aria-hidden />
+                <p className="text-[14px] text-secondary">No artists match these filters.</p>
+                {anyFilter && (
+                  <button type="button" onClick={clearAll} className="mt-2 min-h-touch text-[13px] font-semibold text-accent">
+                    Clear filters
+                  </button>
+                )}
+              </div>
+            ))}
           {sections.map(([letter, rows]) => (
             <div key={letter} data-letter={letter} className="scroll-mt-[calc(var(--bands-header-h)+4px)]">
               <div className="sticky top-[var(--bands-header-h)] z-[1] mb-1 bg-[var(--surface-app)] py-0.5 font-display text-[13px] text-muted">{letter}</div>
