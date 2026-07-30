@@ -4,7 +4,7 @@ import { Screen, Card, Button } from '@/components/ui';
 import { usePlanStatuses } from '@/hooks/usePlanStatus';
 import { buildWrapUp } from '@/domain/wrapUp';
 import { formatTime } from '@/domain/time';
-import { ART, BASE_URL } from '@/config/event';
+import { ART, BASE_URL, NOTIFY_MAILTO } from '@/config/event';
 import type { MenuRoute } from '@/components/MenuDrawer';
 
 /**
@@ -195,9 +195,19 @@ export function WrapUpScreen({
           Chip in
         </a>
         <p className="mt-2 text-center text-[11px] text-muted">
-          Opens the tip jar in your browser — needs a connection, unlike the rest of the app.
+          Opens the tip jar in your browser — that page is Ko-fi&apos;s site, not this app, and it
+          needs a connection, unlike the rest of the app.
         </p>
       </Card>
+
+      {/* Owned audience, one low-key line. This screen is the last thing the
+          app ever shows, so it's the one place a "next city" pointer earns. */}
+      <p className="mb-4 px-1 text-center text-[12px] text-secondary">
+        <a href={NOTIFY_MAILTO} className="underline">
+          Get notified for the next tour stop
+        </a>{' '}
+        — opens an email to me; you&apos;ll hear back when the next city&apos;s app exists.
+      </p>
 
       {!final && !w.empty && (
         <Card className="mb-4 p-4">

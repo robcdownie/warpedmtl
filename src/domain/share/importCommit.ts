@@ -16,6 +16,13 @@ import type { CheckIn, Performance } from '@/domain/types';
 export interface CommitResult {
   backupId: number;
   summary: string;
+  /**
+   * Selections imports only: how many picks actually landed. 0 means the code
+   * decoded fine but carried nothing usable — the app tells the user that
+   * friend "still counts as not imported", and the crew-import beacon must
+   * agree with the app (a crew is a plan that landed, not a code that parsed).
+   */
+  selectionsImported?: number;
 }
 
 export async function commitImport(repo: Repo, env: Envelope): Promise<CommitResult> {
@@ -38,6 +45,7 @@ export async function commitImport(repo: Repo, env: Envelope): Promise<CommitRes
   });
 
   let summary = '';
+  let selectionsImported: number | undefined;
 
   if (env.type === 'selections') {
     const { user, selections } = selectionsFromData(env.data as SelectionsData);
@@ -60,6 +68,7 @@ export async function commitImport(repo: Repo, env: Envelope): Promise<CommitRes
     };
     await repo.putSettings(settings);
     summary = `Imported ${valid.length} selections for ${user.name}.`;
+    selectionsImported = valid.length;
     if (valid.length === 0) {
       // An import that carried nothing must not read as "Sam is free all day".
       summary = `${user.name}'s code had no usable picks — their plan still counts as not imported.`;
@@ -192,7 +201,7 @@ export async function commitImport(repo: Repo, env: Envelope): Promise<CommitRes
     summary = `Restored backup: ${d.users.length} users, ${d.selections.length} selections.`;
   }
 
-  return { backupId, summary };
+  return { backupId, summary, selectionsImported };
 }
 
 /** Roll back a prior import using its snapshot. */

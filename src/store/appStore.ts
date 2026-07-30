@@ -24,6 +24,7 @@ import type {
 import { selectionKey } from '@/db/schema';
 import { artistId, mainPerformanceId, unpluggedPerformanceId } from '@/domain/slug';
 import { commitImport, rollbackImport } from '@/domain/share/importCommit';
+import { trackCrewImport } from '@/analytics';
 
 export type TabId = 'now' | 'bands' | 'schedule' | 'group' | 'map';
 
@@ -604,6 +605,13 @@ export const useApp = create<AppState>((set, get) => ({
     const repo = repoFor(get().mode);
     const res = await commitImport(repo, env);
     await get().reloadAll();
+    // "Crews formed" (gate memo): a SELECTIONS code that actually landed
+    // picks, on the real database. Schedule/coordinates/backup imports and
+    // demo-mode experiments never count — and the beacon itself no-ops
+    // unless analytics is switched on (src/analytics.ts).
+    if (get().mode === 'prod' && env.type === 'selections' && (res.selectionsImported ?? 0) > 0) {
+      trackCrewImport();
+    }
     return res;
   },
 

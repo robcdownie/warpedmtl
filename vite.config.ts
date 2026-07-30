@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
+import { GOATCOUNTER_SITE_CODE } from './src/config/analytics';
 
 // GitHub Pages project site is served from /warpedmtl/ — lowercase on
 // purpose, Pages paths are case-sensitive and the repo name is the path.
@@ -33,6 +34,29 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    {
+      // GoatCounter, cookieless. The <script> tag only exists in the built
+      // page when a site code is configured in src/config/analytics.ts — with
+      // the placeholder empty string the HTML carries no analytics reference
+      // at all: zero requests, nothing to opt out of. The script is
+      // cross-origin (gc.zgo.at) on purpose; see the runtimeCaching note
+      // below for why the service worker must never touch it.
+      name: 'goatcounter-snippet',
+      transformIndexHtml() {
+        if (!GOATCOUNTER_SITE_CODE) return [];
+        return [
+          {
+            tag: 'script',
+            attrs: {
+              'data-goatcounter': `https://${GOATCOUNTER_SITE_CODE}.goatcounter.com/count`,
+              async: true,
+              src: 'https://gc.zgo.at/count.js',
+            },
+            injectTo: 'head',
+          },
+        ];
+      },
+    },
     VitePWA({
       registerType: 'prompt',
       injectRegister: null, // we register manually in src/pwa.ts
@@ -89,6 +113,11 @@ export default defineConfig({
             // Any GET under our own base path that we didn't precache: cache-first.
             // Scoped to BASE rather than the whole origin so this app never
             // caches a sibling app's assets (same origin, different path).
+            // The scoping ALSO keeps analytics honest: GoatCounter's count.js
+            // and count pixel are cross-origin (gc.zgo.at / goatcounter.com)
+            // and match no rule here, so the SW never caches or replays them
+            // — a cached script would ship analytics into the offline bundle,
+            // and a cached pixel would swallow beacons while looking sent.
             urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith(BASE),
             handler: 'CacheFirst',
             options: {

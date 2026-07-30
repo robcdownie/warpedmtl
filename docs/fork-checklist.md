@@ -5,8 +5,9 @@ why each one exists. Written while forking Long Beach → Montréal so the next
 fork (Mexico City, Orlando) is a ~3-session job instead of nine. Work through
 it top to bottom; the order is dependency order, not importance.
 
-Status reflects the Montréal fork: all three sessions are done — S1
-(identity), S2 (sweep + harness), S3 (seeds + ship).
+Status reflects the Montréal fork: all four sessions are done — S1
+(identity), S2 (sweep + harness), S3 (seeds + ship), S4 (measurement +
+owned audience).
 
 ## 1. Identity (S1) — do this before anything renders
 
@@ -124,18 +125,57 @@ Status reflects the Montréal fork: all three sessions are done — S1
   through the new `__WLB__.seedLineup()` debug hook (same pattern as
   `HARNESS_USERS`), demo mode ships obviously-fictional bands in
   `demoSchedule.ts`, `seed.test.ts` runs the dedup mechanics on fixture
-  lists via `buildSeed(lists)`, and `shots.mjs` seeds its own five. When the
-  real lineup lands (fill procedure:
-  `festival-blueprint/montreal/lineup-staging.md`), note its §3 step 6: the
-  ban needs the one Taking Back Sunday exception taught to it THEN — never
-  pre-emptively.
+  lists via `buildSeed(lists)`, and `shots.mjs` seeds its own five. Band names that
+  legitimately embed a banned word (Montréal: Taking Back Sunday) are
+  already taught to the ban via `BAN_EXCEPTIONS` in `verify-e2e.mjs` — done
+  in S4, ahead of the lineup, so the floating seed task can't go red on it;
+  see §4 for the rule and the self-test that keeps the exception honest.
+  Lineup fill procedure: `festival-blueprint/montreal/lineup-staging.md`
+  (its §3 step 6 is pre-satisfied).
 - [x] Ship: full gate (`npm test` + `verify-e2e`), enable Pages (workflow
   build type) BEFORE the first push, push to `main` (`deploy.yml` fires on
   push and gates on the same suites), then verify the live URL + string ban
   against the served bundle — the deployed text, not the local dist.
 
+## 4. Measurement + owned audience (S4)
+
+- [x] `src/config/analytics.ts` — `GOATCOUNTER_SITE_CODE`, one per instance
+  (a NEW free GoatCounter site per city, or the numbers blend). Empty string
+  = analytics fully off: no tag in the built HTML, zero requests. The
+  count.js tag is injected at build time by the `goatcounter-snippet` plugin
+  in `vite.config.ts`; nothing to edit per fork besides the code itself.
+- [x] Beacons (`src/analytics.ts`, wired in `main.tsx` + the selections
+  branch of `applyImport` in `appStore.ts`): once-ever `/install`,
+  once-per-local-day `/standalone-launch` (standalone display mode only),
+  `/crew-import` per selections code that lands ≥1 pick. All queue in the
+  meta store until online, all no-op with an empty site code or on
+  localhost (dev + e2e must never inflate the live counter). City-agnostic —
+  no per-fork edit; the site code is the namespace. Gating logic is
+  unit-tested in `src/analytics.test.ts`.
+- [x] SW must never cache the analytics script: `runtimeCaching` in
+  `vite.config.ts` is same-origin + BASE-scoped, so cross-origin gc.zgo.at
+  never matches — keep it that way (comment in the config says why).
+- [x] About screen discloses the counting (anonymous, cookieless, bare
+  tallies) — the bullet renders ONLY when a site code is set, so a build
+  that sends nothing claims nothing. Tip-jar footnotes on About + wrap-up
+  name Ko-fi as whose site the donate page is.
+- [x] Owned audience: `NOTIFY_MAILTO` in `config/event.ts` ("Get notified
+  for the next tour stop"), one low-key line on About + wrap-up. The
+  wrap-up line matters most — it's the wound-down page, i.e. the only
+  audience surface that outlives the instance.
+- [x] String-ban exceptions: `BAN_EXCEPTIONS` in `verify-e2e.mjs` strips
+  exact known-safe names (full band names only, added only when they
+  actually ship) before the scan. Self-tested in the functional pass: a
+  seeded "Taking Back Sunday" must render AND pass the ban, and a bare
+  "Sunday" literal in the same text must still trip it. Per fork: empty the
+  list, re-add whichever of the new city's confirmed bands embed banned
+  words.
+
 ## Left for a human, per instance
 
+- Create the instance's GoatCounter site (free, ~1 min) and paste the site
+  code into `src/config/analytics.ts` — until then the app sends nothing
+  and the About disclosure stays hidden.
 - Paste the real tip-jar URL into `public/donate.html`.
 - Device pass on a phone with the previous instance installed: old app still
   opens with data intact, new app installs alongside it (the §1 DB/cache

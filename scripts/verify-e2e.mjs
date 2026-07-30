@@ -651,6 +651,68 @@ async function functionalPass(base) {
     await window.__WLB__.state().deleteCheckIn('e2e-checkin');
   });
 
+  // 9. STRING-BAN SELF-TEST. The ban scans the built bundle, and today's
+  // bundle ships no lineup — so the BAN_EXCEPTIONS mechanism would sit
+  // unproven until the real lineup lands, which is exactly when a surprise
+  // would hurt (Taking Back Sunday IS on the Montréal bill). Prove it now:
+  // seed that one name through the same debug hook the lineup harness uses,
+  // read the Bands screen's real rendered text, and run the very scan the
+  // bundle gets — once as-is (exception must let the band through) and once
+  // with a stray weekday literal appended (ban must still bite).
+  await page.evaluate(() =>
+    window.__WLB__.seedLineup(
+      [
+        {
+          id: 'hx-taking-back-sunday',
+          name: 'Taking Back Sunday',
+          searchAliases: [],
+          category: 'main-lineup',
+        },
+      ],
+      [
+        {
+          id: 'hx-main-saturday-taking-back-sunday',
+          artistId: 'hx-taking-back-sunday',
+          type: 'main',
+          day: 'saturday',
+          stageId: null,
+          startTime: null,
+          endTime: null,
+          estimatedEndTime: null,
+          scheduleStatus: 'time-pending',
+          officialStatus: 'confirmed',
+          sourceRevision: 0,
+          verifiedAt: null,
+        },
+      ],
+    ),
+  );
+  await page.click('nav[aria-label="Primary"] button[aria-label="Bands"]');
+  await page.waitForTimeout(400);
+  const bandsText = await page.evaluate(() => document.body.innerText);
+  check(
+    'ban self-test: seeded "Taking Back Sunday" really renders',
+    bandsText.includes('Taking Back Sunday'),
+  );
+  const scanSeeded = banOffenders([{ name: 'rendered Bands screen', text: bandsText }]);
+  check(
+    'ban self-test: the taught exception lets the band name pass',
+    scanSeeded.every((b) => b.offenders.length === 0),
+    scanSeeded
+      .filter((b) => b.offenders.length > 0)
+      .map((b) => `${b.label}: ${b.offenders.join('; ')}`)
+      .join(' | '),
+  );
+  const scanBare = banOffenders([
+    { name: 'rendered Bands screen + stray literal', text: `${bandsText} Doors open Sunday.` },
+  ]);
+  const sundayBare = scanBare.find((b) => b.label === 'Sunday');
+  check(
+    'ban self-test: a bare "Sunday" literal still trips the ban',
+    !!sundayBare && sundayBare.offenders.length === 1,
+    sundayBare?.offenders.join('; ') ?? 'no Sunday entry in the scan',
+  );
+
   await browser.close();
 }
 
@@ -785,10 +847,7 @@ async function renderPass(base, cfg) {
  *   "July 25"    — case-insensitive; the old city's dates.
  *   "venmo.com"  — the old payment rail; everything routes via donate.html.
  *
- * When this trips, fix the SOURCE — never this list. One known future
- * exception: if Taking Back Sunday lands with the real Montréal lineup, teach
- * the Sunday check that one band name (and only that) — the procedure is
- * written in festival-blueprint/montreal/lineup-staging.md §3 step 6.
+ * When this trips, fix the SOURCE — never this list.
  */
 const BANNED_STRINGS = [
   { label: 'Sunday', re: /Sunday/ }, // case-sensitive on purpose — see above
@@ -796,6 +855,49 @@ const BANNED_STRINGS = [
   { label: 'July 25', re: /july 25/i },
   { label: 'venmo.com', re: /venmo\.com/i },
 ];
+
+/**
+ * Exact strings stripped from every scanned text BEFORE the ban runs.
+ *
+ * WHY: the Sunday ban is a substring scan, and Taking Back Sunday — a band
+ * on the announced Montréal bill — carries the banned word inside a proper
+ * noun. Without this, seeding the real lineup would turn the ban red on a
+ * string that is exactly what the app SHOULD say. Stripping the full band
+ * name (and only the full name) first means every other capital-S Sunday,
+ * including one standing right next to the band name, still trips.
+ *
+ * Rules for this list: full exact strings only, each one a name that
+ * legitimately embeds a banned word, added only when it actually ships —
+ * never a regex, never a whole file. Anything else that trips the ban is a
+ * regression; fix the source.
+ */
+const BAN_EXCEPTIONS = ['Taking Back Sunday'];
+
+function stripBanExceptions(text) {
+  let out = text;
+  for (const safe of BAN_EXCEPTIONS) {
+    // Join with a placeholder, not '', so a removal can never splice its
+    // neighbours into a NEW banned string ("Sun[Taking Back Sunday]day").
+    out = out.split(safe).join(' ');
+  }
+  return out;
+}
+
+/** Scan named texts for banned strings (exceptions stripped first). */
+function banOffenders(texts) {
+  return BANNED_STRINGS.map((banned) => {
+    const offenders = [];
+    for (const t of texts) {
+      const stripped = stripBanExceptions(t.text);
+      const i = stripped.search(banned.re);
+      if (i === -1) continue;
+      const from = Math.max(0, i - 30);
+      const snippet = stripped.slice(from, i + banned.label.length + 30).replace(/\s+/g, ' ');
+      offenders.push(`${t.name} "…${snippet}…"`);
+    }
+    return { label: banned.label, offenders };
+  });
+}
 
 async function stringBanPass() {
   const files = [join(DIST, 'index.html'), join(DIST, 'manifest.webmanifest')];
@@ -809,16 +911,8 @@ async function stringBanPass() {
       text: await readFile(f, 'utf8').catch(() => ''),
     })),
   );
-  for (const banned of BANNED_STRINGS) {
-    const offenders = texts.filter((t) => banned.re.test(t.text));
-    const where = offenders
-      .map((o) => {
-        const i = o.text.search(banned.re);
-        const from = Math.max(0, i - 30);
-        return `${o.name} "…${o.text.slice(from, i + banned.label.length + 30).replace(/\s+/g, ' ')}…"`;
-      })
-      .join('; ');
-    check(`built bundle never contains "${banned.label}"`, offenders.length === 0, where);
+  for (const { label, offenders } of banOffenders(texts)) {
+    check(`built bundle never contains "${label}"`, offenders.length === 0, offenders.join('; '));
   }
 }
 

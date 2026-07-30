@@ -1,6 +1,7 @@
 import { Screen, Card } from '@/components/ui';
 import { WarpedWordmark } from '@/components/WarpedWordmark';
-import { APP_NAME, APP_DISCLAIMER, EVENT, BASE_URL } from '@/config/event';
+import { APP_NAME, APP_DISCLAIMER, EVENT, BASE_URL, NOTIFY_MAILTO } from '@/config/event';
+import { GOATCOUNTER_SITE_CODE } from '@/config/analytics';
 import { festivalDaysLine } from '@/domain/time';
 
 export function AboutScreen() {
@@ -39,6 +40,14 @@ export function AboutScreen() {
         </h2>
         <ul className="list-disc space-y-1 pl-5 text-[13px] leading-relaxed text-secondary">
           <li>Everything is stored on your phone. No account, no server, no login.</li>
+          {/* Rendered only when counting is actually switched on — an app
+              that sends nothing shouldn't claim it counts anything. */}
+          {GOATCOUNTER_SITE_CODE !== '' && (
+            <li>
+              One exception, and it counts rather than tracks: an anonymous, cookieless tally of
+              installs, launches and code imports — bare numbers, nothing that identifies you.
+            </li>
+          )}
           <li>Works fully offline after your first visit — built for weak festival signal.</li>
           <li>
             Friends&apos; plans move between phones by QR code or a short text code, not the
@@ -70,12 +79,19 @@ export function AboutScreen() {
           Chip in
         </a>
         <p className="mt-2 text-center text-[11px] text-muted">
-          Opens the tip jar in your browser — needs a connection, unlike the rest of the app.
+          Opens the tip jar in your browser — that page is Ko-fi&apos;s site, not this app, and it
+          needs a connection, unlike the rest of the app.
         </p>
       </Card>
 
       <p className="px-1 text-center text-[11px] text-muted">
         Made by a fan, for fans. Have a great show.
+      </p>
+      <p className="mt-2 px-1 text-center text-[11px] text-muted">
+        <a href={NOTIFY_MAILTO} className="text-secondary underline">
+          Get notified for the next tour stop
+        </a>{' '}
+        — opens an email to me; you&apos;ll hear back when the next city&apos;s app exists.
       </p>
     </Screen>
   );

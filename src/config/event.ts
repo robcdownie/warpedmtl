@@ -37,6 +37,15 @@ export const APP_DISCLAIMER =
  */
 export const ENTRANCE_LOCATION_ID = 'parc-jean-drapeau-entrance';
 
+/**
+ * Owned audience — the one thing the wound-down Long Beach page never had.
+ * A plain mailto, not a list service: the reader writes the email themselves,
+ * so joining is the act of sending it, and there is nothing to unsubscribe
+ * from but a reply. Rendered as one low-key line on About + the wrap-up.
+ */
+export const NOTIFY_MAILTO =
+  'mailto:robcdownie@gmail.com?subject=Notify%20me%20for%20the%20next%20stop';
+
 /** Base path used for asset URLs (matches vite base + PWA scope). */
 export const BASE_URL = import.meta.env.BASE_URL;
 
