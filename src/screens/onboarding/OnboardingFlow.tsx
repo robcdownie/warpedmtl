@@ -1,8 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  Star,
-  Users,
-  WifiOff,
   Check,
   Loader2,
   ArrowRight,
@@ -204,12 +201,9 @@ function PurposeStep({
         {FR_WELCOME_NOTE}
       </p>
 
-      <ul className="mt-6 space-y-3">
-        <Benefit Icon={Star} title="Build your personal band list" body="Must See, Want to See, Maybe — and spot clashes before you're standing in one." />
-        <Benefit Icon={Users} title="Share plans using QR or text codes" body="Scan or paste. No accounts, no signal needed." />
-        <Benefit Icon={ListChecks} title="Find conflicts and meetup windows" body="Including windows where everyone is actually free." />
-        <Benefit Icon={WifiOff} title="Reopen the app without service" body="Schedule, map and your plan all live on this phone." />
-      </ul>
+      {/* No benefit list here. Every item restated a clause of the sentence
+          directly above it, and the four of them pushed Get Started ~220px
+          below the fold on an iPhone SE. */}
 
       <div className="flex-1" />
 
@@ -269,28 +263,6 @@ export function PhaseModel({ className }: { className?: string }) {
         </li>
       ))}
     </ol>
-  );
-}
-
-function Benefit({
-  Icon,
-  title,
-  body,
-}: {
-  Icon: typeof Star;
-  title: string;
-  body: string;
-}) {
-  return (
-    <li className="flex items-start gap-3">
-      <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
-        <Icon size={20} aria-hidden />
-      </span>
-      <span>
-        <span className="block text-[15px] font-semibold text-primary">{title}</span>
-        <span className="block text-[13px] leading-snug text-secondary">{body}</span>
-      </span>
-    </li>
   );
 }
 
