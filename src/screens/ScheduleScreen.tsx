@@ -33,14 +33,22 @@ export function ScheduleScreen({ onOpenMenu }: { onOpenMenu: (r: MenuRoute) => v
   const updateSettings = useApp((s) => s.updateSettings);
   const savedView = useApp((s) => s.settings.scheduleView);
 
-  // Today's day, so day two doesn't open on day one's plan.
-  const today = getNow().day ?? 'saturday';
+  // Today's day, so day two doesn't open on day one's plan. Null on every
+  // date that isn't a festival day, which is most of the app's life.
+  const todayId = getNow().day;
+  const today = todayId ?? 'saturday';
   // Come back to whichever view you were last on. The old rule — "any day has
   // sets, so show My Day" — sent you to the plan from Sunday morning onward
   // with Sunday's board still untyped, and every phone lock cost five taps to
-  // get back. First run falls back to whether today is entered at all.
+  // get back.
+  //
+  // The first-run fallback exists for one person: a captain typing the board on
+  // festival morning. Keying it off `today` alone collapsed the pre-festival
+  // case into it — before the weekend `today` fell back to day one, day one is
+  // always empty, and so a brand-new user three weeks out opened the app on a
+  // blank board editor. Fire it only on an actual festival date.
   const [view, setViewState] = useState<View>(
-    savedView ?? (status.byDay[today].status === 'empty' ? 'editor' : 'schedule'),
+    savedView ?? (todayId !== null && status.byDay[todayId].status === 'empty' ? 'editor' : 'schedule'),
   );
   const setView = (v: View) => {
     setViewState(v);
